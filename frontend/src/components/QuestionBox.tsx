@@ -35,7 +35,7 @@ function QuestionBox({ onSubmit, disabled, placeholder, focusKey, size = 'regula
         submit()
       }}
       className={`flex items-end gap-2 rounded-md border bg-surface focus-within:border-accent ${
-        large ? 'border-transparent p-2 shadow-[0_8px_24px_rgb(0_0_0/0.25)]' : 'border-line-strong p-1.5'
+        large ? 'border-line-strong p-2 shadow-[0_4px_16px_rgb(43_29_22/0.06)]' : 'border-line-strong p-1.5'
       }`}
     >
       <textarea

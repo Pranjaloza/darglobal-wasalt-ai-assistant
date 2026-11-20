@@ -7,20 +7,25 @@ import type { ReactNode } from 'react'
  */
 export const CONTAINER = 'mx-auto w-full max-w-5xl px-4 md:px-8'
 
+/** Narrower reading column for the chat: header, messages and input share it. */
+export const CHAT_CONTAINER = 'mx-auto w-full max-w-3xl px-4 md:px-8'
+
 export function PageHeader({
   title,
   subtitle,
   onOpenMenu,
   right,
+  container = CONTAINER,
 }: {
   title: string
   subtitle?: string
   onOpenMenu: () => void
   right?: ReactNode
+  container?: string
 }) {
   return (
     <header className="h-14 shrink-0 border-b border-line bg-surface">
-      <div className={`${CONTAINER} flex h-full items-center gap-3`}>
+      <div className={`${container} flex h-full items-center gap-3`}>
         <button
           onClick={onOpenMenu}
           className="-ml-1.5 rounded-sm p-1.5 text-ink-2 hover:bg-panel md:hidden"

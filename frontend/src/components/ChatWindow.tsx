@@ -4,9 +4,9 @@ import { compactSar } from '../format'
 import type { ApiStatus, ChatMessage, DatasetStats } from '../types'
 import ListingsTable from './ListingsTable'
 import Markdown from './Markdown'
-import Overview from './Overview'
+import Welcome from './Welcome'
 import QuestionBox from './QuestionBox'
-import { CONTAINER, PageHeader } from './ui'
+import { CHAT_CONTAINER, PageHeader } from './ui'
 
 interface ChatWindowProps {
   title: string
@@ -21,7 +21,6 @@ interface ChatWindowProps {
   apiStatus: ApiStatus
   stats: DatasetStats | null
   onOpenMenu: () => void
-  onOpenListings: () => void
 }
 
 const STATUS_TEXT: Record<ApiStatus, { text: string; className: string }> = {
@@ -141,7 +140,6 @@ function ChatWindow({
   apiStatus,
   stats,
   onOpenMenu,
-  onOpenListings,
 }: ChatWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const status = STATUS_TEXT[apiStatus]
@@ -160,17 +158,17 @@ function ChatWindow({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-paper">
       <PageHeader
-        title={isEmpty ? 'Overview' : title}
-        subtitle={isEmpty ? 'DarGlobal and Wasalt property data' : undefined}
+        title={isEmpty ? 'New conversation' : title}
+        container={CHAT_CONTAINER}
         onOpenMenu={onOpenMenu}
         right={status.text && <span className={`shrink-0 text-xs ${status.className}`}>{status.text}</span>}
       />
 
       <main className="min-h-0 flex-1 overflow-y-auto">
         {isEmpty ? (
-          <Overview stats={stats} onAsk={handleSubmit} onOpenListings={onOpenListings} disabled={isLoading} />
+          <Welcome stats={stats} onAsk={handleSubmit} disabled={isLoading} />
         ) : (
-          <div className={`${CONTAINER} space-y-5 py-6`}>
+          <div className={`${CHAT_CONTAINER} space-y-5 py-6`}>
             {messages.map((message) =>
               message.role === 'user' ? (
                 <div key={message.id} className="flex justify-end">
@@ -210,7 +208,7 @@ function ChatWindow({
 
       {!isEmpty && (
         <div className="shrink-0 border-t border-line bg-surface py-3">
-          <div className={CONTAINER}>
+          <div className={CHAT_CONTAINER}>
             <QuestionBox
               onSubmit={handleSubmit}
               disabled={isLoading}

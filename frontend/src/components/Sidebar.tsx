@@ -1,4 +1,4 @@
-import { LayoutDashboard, List, PanelLeftClose, PanelLeftOpen, Plus, Trash2, X } from 'lucide-react'
+import { List, MessageSquareText, PanelLeftClose, PanelLeftOpen, Plus, Trash2, X } from 'lucide-react'
 import type { ApiStatus, Conversation, DatasetStats, View } from '../types'
 
 interface SidebarProps {
@@ -66,7 +66,7 @@ function Sidebar({
   stats,
 }: SidebarProps) {
   const navItems: { id: View; label: string; icon: typeof List }[] = [
-    { id: 'chat', label: 'Overview & chat', icon: LayoutDashboard },
+    { id: 'chat', label: 'Chat', icon: MessageSquareText },
     { id: 'discovery', label: 'Listings', icon: List },
   ]
   const status = STATUS[apiStatus]

@@ -176,7 +176,6 @@ function App() {
           apiStatus={apiStatus}
           stats={stats}
           onOpenMenu={() => setMobileMenuOpen(true)}
-          onOpenListings={() => handleChangeView('discovery')}
         />
       ) : (
         <PropertyDiscovery stats={stats} onOpenMenu={() => setMobileMenuOpen(true)} />
