@@ -13,6 +13,14 @@ class FakeKnowledge:
             "locality": "X", "facing": "North", "source_url": "https://example.com/a"
         }]
 
+    def stats(self):
+        return {
+            "total_listings": 1, "darglobal_pages": 1,
+            "cities": [{"name": "Madinah", "count": 1}],
+            "price_range": {"min": 1_000_000, "max": 1_000_000},
+            "bedroom_range": {"min": 5, "max": 5}, "currency": "SAR"
+        }
+
     def semantic_search(self, question, limit=5):
         return [{
             "content": "DarGlobal builds luxury homes.",
@@ -57,3 +65,9 @@ def test_properties_endpoint(client):
 
 def test_chat_rejects_short_question(client):
     assert client.post("/chat", json={"question": "a"}).status_code == 422
+
+
+def test_stats_endpoint(client):
+    body = client.get("/api/stats").json()
+    assert body["total_listings"] == 1
+    assert body["cities"][0]["name"] == "Madinah"

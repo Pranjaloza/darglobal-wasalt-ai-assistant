@@ -141,3 +141,37 @@ class KnowledgeSearch:
         )
 
         return properties[:limit]
+
+    # ------------------------------------------
+    # DATASET STATS (for the frontend filters)
+    # ------------------------------------------
+
+    def stats(self):
+        metadatas = self.collection.get(include=["metadatas"])["metadatas"]
+
+        listings = [m for m in metadatas if m.get("company") == "wasalt"]
+        darglobal_pages = {
+            m.get("source_url") or m.get("title")
+            for m in metadatas
+            if m.get("company") == "darglobal"
+        }
+
+        cities = {}
+        for m in listings:
+            if m.get("city"):
+                cities[m["city"]] = cities.get(m["city"], 0) + 1
+
+        prices = [m["price"] for m in listings if isinstance(m.get("price"), (int, float))]
+        bedrooms = [m["bedrooms"] for m in listings if isinstance(m.get("bedrooms"), (int, float))]
+
+        return {
+            "total_listings": len(listings),
+            "darglobal_pages": len(darglobal_pages),
+            "cities": [
+                {"name": name, "count": count}
+                for name, count in sorted(cities.items(), key=lambda item: -item[1])
+            ],
+            "price_range": {"min": min(prices), "max": max(prices)} if prices else None,
+            "bedroom_range": {"min": int(min(bedrooms)), "max": int(max(bedrooms))} if bedrooms else None,
+            "currency": "SAR",
+        }

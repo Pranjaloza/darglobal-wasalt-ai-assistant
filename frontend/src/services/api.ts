@@ -1,5 +1,11 @@
 import axios from 'axios'
-import type { ChatRequest, ChatResponse } from '../types'
+import type {
+  ChatRequest,
+  ChatResponse,
+  DatasetStats,
+  PropertyFilters,
+  PropertySearchResponse,
+} from '../types'
 
 // Dev: set in frontend/.env.development (backend on :8001).
 // Production build: empty, so requests go to the same origin that served the page.
@@ -24,5 +30,20 @@ export const sendChatMessage = async (
 
 export const checkApiHealth = async () => {
   const response = await api.get('/health')
+  return response.data
+}
+export const searchProperties = async (
+  filters: PropertyFilters
+): Promise<PropertySearchResponse> => {
+  // Drop empty values so the backend only receives filters the user set
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => value !== undefined && value !== '')
+  )
+  const response = await api.get<PropertySearchResponse>('/properties', { params })
+  return response.data
+}
+
+export const getDatasetStats = async (): Promise<DatasetStats> => {
+  const response = await api.get<DatasetStats>('/api/stats')
   return response.data
 }

@@ -54,6 +54,14 @@ def health():
     return {"status": "healthy"}
 
 
+@app.get("/api/stats")
+def stats(knowledge: KnowledgeSearch = Depends(get_knowledge)):
+    try:
+        return knowledge.stats()
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=f"Stats failed: {error}")
+
+
 @app.post("/chat")
 def chat(request: ChatRequest, knowledge: KnowledgeSearch = Depends(get_knowledge)):
     return answer_question(request.question.strip(), knowledge)

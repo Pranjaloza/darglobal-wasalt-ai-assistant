@@ -33,8 +33,46 @@ export interface ChatMessage {
   content: string
   properties?: Property[]
   sources?: Source[]
-  timestamp: Date
+  model?: string
+  // ISO string, so conversations can be saved to localStorage
+  timestamp: string
 }
+
 export interface ChatRequest {
   question: string
 }
+
+export interface Conversation {
+  id: string
+  title: string
+  messages: ChatMessage[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PropertyFilters {
+  city?: string
+  max_price?: number
+  min_bedrooms?: number
+  exact_bedrooms?: number
+  limit?: number
+}
+
+export interface PropertySearchResponse {
+  filters: Record<string, unknown>
+  total_returned: number
+  properties: Property[]
+}
+
+export interface DatasetStats {
+  total_listings: number
+  darglobal_pages: number
+  cities: { name: string; count: number }[]
+  price_range: { min: number; max: number } | null
+  bedroom_range: { min: number; max: number } | null
+  currency: string
+}
+
+export type View = 'chat' | 'discovery'
+
+export type ApiStatus = 'checking' | 'online' | 'offline'
