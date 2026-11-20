@@ -1,15 +1,16 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+
+sys.path.insert(0, str(ROOT))
+
 import chromadb
-from sentence_transformers import SentenceTransformer
+
+from app.services.embeddings import embed
 
 DB_PATH = str(ROOT / "vector_db")
 COLLECTION_NAME = "darglobal_wasalt_knowledge"
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-
-print("Loading embedding model...")
-model = SentenceTransformer(MODEL_NAME)
 
 print("Connecting to ChromaDB...")
 client = chromadb.PersistentClient(path=DB_PATH)
@@ -20,10 +21,7 @@ print("Stored chunks:", collection.count())
 
 
 def search_knowledge(question, top_k=3):
-    query_embedding = model.encode(
-        question,
-        normalize_embeddings=True
-    ).tolist()
+    query_embedding = embed([question])[0]
 
     results = collection.query(
         query_embeddings=[query_embedding],

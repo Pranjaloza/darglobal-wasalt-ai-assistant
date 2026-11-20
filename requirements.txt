@@ -7,7 +7,6 @@ requests==2.34.2
 
 # Retrieval
 chromadb==1.5.9
-sentence-transformers==6.3.0
 
 # Data pipeline (scraping / extraction)
 beautifulsoup4==4.15.0

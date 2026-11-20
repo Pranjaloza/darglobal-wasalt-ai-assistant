@@ -1,8 +1,7 @@
 
 import chromadb
-from sentence_transformers import SentenceTransformer
-
 from app import config
+from app.services.embeddings import embed, get_embedder
 
 
 class KnowledgeSearch:
@@ -16,9 +15,8 @@ class KnowledgeSearch:
             config.COLLECTION_NAME
         )
 
-        self.model = SentenceTransformer(
-            config.EMBEDDING_MODEL
-        )
+        # Load the embedding model now so the first question isn't slow.
+        get_embedder()
 
     # ------------------------------------------
     # SEMANTIC SEARCH
@@ -26,10 +24,7 @@ class KnowledgeSearch:
 
     def semantic_search(self, question, company=None, limit=5):
 
-        query_embedding = self.model.encode(
-            question,
-            normalize_embeddings=True
-        ).tolist()
+        query_embedding = embed([question])[0]
 
         filters = None
 

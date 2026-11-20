@@ -6,7 +6,8 @@ import hashlib
 from pathlib import Path
 
 import chromadb
-from sentence_transformers import SentenceTransformer
+
+from app.services.embeddings import embed
 
 
 # --------------------------------------------------
@@ -17,7 +18,6 @@ DATASET_PATH = (ROOT / "data/processed/combined_knowledge.jsonl")
 DB_PATH = (ROOT / "vector_db")
 
 COLLECTION_NAME = "darglobal_wasalt_knowledge"
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 CHUNK_SIZE = 1800
 CHUNK_OVERLAP = 250
@@ -178,18 +178,9 @@ def main():
 
     ids, documents, metadatas = prepare_chunks(records)
 
-    print("\nLoading embedding model...")
+    print("\nEmbedding documents...")
 
-    model = SentenceTransformer(MODEL_NAME)
-
-    print("Embedding documents...")
-
-    embeddings = model.encode(
-        documents,
-        show_progress_bar=True,
-        normalize_embeddings=True,
-        batch_size=32,
-    )
+    embeddings = embed(documents)
 
     client = chromadb.PersistentClient(
         path=str(DB_PATH)
@@ -218,7 +209,7 @@ def main():
             ids=ids[start:end],
             documents=documents[start:end],
             metadatas=metadatas[start:end],
-            embeddings=embeddings[start:end].tolist(),
+            embeddings=embeddings[start:end],
         )
 
     print("\n========== VECTOR DATABASE COMPLETE ==========")

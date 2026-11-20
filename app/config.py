@@ -16,7 +16,8 @@ FRONTEND_DIST_DIR = Path(os.getenv("FRONTEND_DIST_DIR", PROJECT_ROOT / "frontend
 
 # Vector store
 COLLECTION_NAME = "darglobal_wasalt_knowledge"
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # ONNX build, see app/services/embeddings.py
+EMBEDDING_CACHE_DIR = Path(os.getenv("EMBEDDING_CACHE_DIR", Path.home() / ".cache" / "chroma" / "onnx_models"))
 
 # LLM provider
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
