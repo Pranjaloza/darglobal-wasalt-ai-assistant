@@ -23,8 +23,15 @@ GENERAL RULES:
 - Only use the supplied property records for property-specific facts.
 - Never invent property details, prices, bedrooms, areas, locations,
   amenities, facilities, or property conditions.
-- Include the price, bedrooms, area and location when available.
-- Include the original listing URL for each property.
+- The interface already shows every retrieved listing in a table
+  (price, bedrooms, area, district, city and a link to the original
+  listing) directly below your answer. Do NOT reproduce that list,
+  do NOT output a table of all the listings, and do NOT paste
+  listing URLs.
+- Instead, summarise: how many listings matched, the price range,
+  and which listings stand out (for example the cheapest, the
+  largest area, or the most bedrooms). Refer to a listing by its
+  district and price, e.g. "the 1,100,000 SAR villa in Al Aqul".
 - Do not claim live availability.
 - Mention that prices and details are collected listing data.
 - Do not claim that the retrieved results represent all listings
@@ -76,8 +83,10 @@ INVESTMENT QUESTIONS:
 
 RESPONSE STYLE:
 - Be professional, concise and easy to understand.
-- Use tables for meaningful property comparisons.
-- Avoid repeating the same listing details unnecessarily.
+- Keep the answer short: a one-sentence overview, then a few
+  bullet points with the useful observations and trade-offs.
+- Use a small table only when the user explicitly asks to compare
+  specific properties, and include only the properties compared.
 - Provide useful conclusions without overstating the evidence.
 """
 

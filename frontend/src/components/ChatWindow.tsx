@@ -125,7 +125,7 @@ function EmptyState({
 
   return (
     <div className="mx-auto w-full max-w-2xl pt-6 md:pt-16">
-      <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
+      <h1 className="max-w-xl text-balance font-display text-3xl font-semibold leading-tight text-ink md:text-4xl">
         Ask about DarGlobal projects or Wasalt listings
       </h1>
       <p className="mt-2 max-w-xl text-sm leading-6 text-ink-2">

@@ -19,7 +19,7 @@ interface SidebarProps {
 
 const STATUS: Record<ApiStatus, { dot: string; label: string }> = {
   checking: { dot: 'bg-warn', label: 'Connecting' },
-  online: { dot: 'bg-accent', label: 'Connected' },
+  online: { dot: 'bg-[#5fae8f]', label: 'Connected' },
   offline: { dot: 'bg-danger', label: 'Offline' },
 }
 
@@ -76,29 +76,29 @@ function Sidebar({
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-line bg-panel transition-[width,transform] duration-200 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-full flex-col bg-nav text-nav-text transition-[width,transform] duration-200 md:static md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } ${iconOnly ? 'w-14' : 'w-64'}`}
       >
         {/* Header */}
-        <div className={`flex h-14 shrink-0 items-center border-b border-line ${iconOnly ? 'justify-center' : 'justify-between px-4'}`}>
+        <div className={`flex h-14 shrink-0 items-center border-b border-nav-line ${iconOnly ? 'justify-center' : 'justify-between px-4'}`}>
           {!iconOnly && (
             <div className="min-w-0 leading-tight">
-              <p className="text-sm font-semibold">DarGlobal · Wasalt</p>
-              <p className="text-xs text-muted">Property research</p>
+              <p className="font-display text-lg font-semibold leading-none tracking-wide text-white">DarGlobal · Wasalt</p>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-gold">Property research</p>
             </div>
           )}
 
           <button
             onClick={onCloseMobile}
-            className="rounded-sm p-1.5 text-muted hover:bg-line hover:text-ink md:hidden"
+            className="rounded-sm p-1.5 text-nav-muted hover:bg-nav-hover hover:text-white md:hidden"
             aria-label="Close menu"
           >
             <X size={17} />
           </button>
           <button
             onClick={onToggleCollapsed}
-            className="hidden rounded-sm p-1.5 text-muted hover:bg-line hover:text-ink md:block"
+            className="hidden rounded-sm p-1.5 text-nav-muted hover:bg-nav-hover hover:text-white md:block"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -117,12 +117,12 @@ function Sidebar({
                 title={label}
                 className={`flex w-full items-center gap-2.5 rounded-md py-1.5 text-sm ${
                   iconOnly ? 'justify-center' : 'px-2.5'
-                } ${active ? 'bg-surface font-medium text-ink shadow-[0_0_0_1px_var(--color-line)]' : 'text-ink-2 hover:bg-line/60'}`}
+                } ${active ? 'bg-nav-active font-medium text-white' : 'text-nav-text hover:bg-nav-hover'}`}
               >
-                <Icon size={16} className={`shrink-0 ${active ? 'text-accent' : 'text-muted'}`} />
+                <Icon size={16} className={`shrink-0 ${active ? 'text-gold' : 'text-nav-muted'}`} />
                 {!iconOnly && label}
                 {!iconOnly && id === 'discovery' && stats && (
-                  <span className="tabular ml-auto text-xs text-faint">{stats.total_listings}</span>
+                  <span className="tabular ml-auto text-xs text-nav-faint">{stats.total_listings}</span>
                 )}
               </button>
             )
@@ -131,12 +131,12 @@ function Sidebar({
 
         {/* History */}
         {!iconOnly ? (
-          <div className="mt-4 flex min-h-0 flex-1 flex-col border-t border-line">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col border-t border-nav-line">
             <div className="flex items-center justify-between px-4 pb-1 pt-3">
-              <span className="text-xs font-medium text-muted">History</span>
+              <span className="text-xs font-medium text-nav-muted">History</span>
               <button
                 onClick={onNewChat}
-                className="flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs text-accent hover:bg-accent-soft"
+                className="flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs text-gold hover:bg-nav-hover"
               >
                 <Plus size={13} />
                 New
@@ -145,34 +145,34 @@ function Sidebar({
 
             <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
               {conversations.length === 0 ? (
-                <p className="px-2.5 py-2 text-xs leading-5 text-faint">
+                <p className="px-2.5 py-2 text-xs leading-5 text-nav-faint">
                   Questions you ask are kept here, in this browser only.
                 </p>
               ) : (
                 groupByDate(conversations).map((group) => (
                   <div key={group.label} className="mt-2">
-                    <p className="px-2.5 pb-1 text-[11px] uppercase tracking-wide text-faint">{group.label}</p>
+                    <p className="px-2.5 pb-1 text-[11px] uppercase tracking-wide text-nav-faint">{group.label}</p>
                     {group.items.map((conversation) => {
                       const active = view === 'chat' && conversation.id === activeId
                       return (
                         <div
                           key={conversation.id}
                           className={`group flex items-center rounded-md ${
-                            active ? 'bg-surface shadow-[0_0_0_1px_var(--color-line)]' : 'hover:bg-line/60'
+                            active ? 'bg-nav-active' : 'hover:bg-nav-hover'
                           }`}
                         >
                           <button
                             onClick={() => onSelectConversation(conversation.id)}
                             title={conversation.title}
                             className={`min-w-0 flex-1 truncate px-2.5 py-1.5 text-left text-sm ${
-                              active ? 'text-ink' : 'text-ink-2'
+                              active ? 'text-white' : 'text-nav-text'
                             }`}
                           >
                             {conversation.title}
                           </button>
                           <button
                             onClick={() => onDeleteConversation(conversation.id)}
-                            className="mr-1 rounded-sm p-1 text-faint hover:text-danger md:invisible md:group-hover:visible"
+                            className="mr-1 rounded-sm p-1 text-nav-faint hover:text-[#f2a7a7] md:invisible md:group-hover:visible"
                             aria-label={`Delete: ${conversation.title}`}
                             title="Delete"
                           >
@@ -190,7 +190,7 @@ function Sidebar({
           <div className="flex flex-1 justify-center pt-3">
             <button
               onClick={onNewChat}
-              className="h-8 w-8 rounded-md text-muted hover:bg-line hover:text-ink"
+              className="h-8 w-8 rounded-md text-nav-muted hover:bg-nav-hover hover:text-white"
               aria-label="New question"
               title="New question"
             >
@@ -200,17 +200,17 @@ function Sidebar({
         )}
 
         {/* Footer: data source + connection */}
-        <div className={`shrink-0 border-t border-line py-3 text-xs ${iconOnly ? 'flex justify-center' : 'px-4'}`}>
+        <div className={`shrink-0 border-t border-nav-line py-3 text-xs ${iconOnly ? 'flex justify-center' : 'px-4'}`}>
           {iconOnly ? (
             <span className={`h-2 w-2 rounded-full ${status.dot}`} title={status.label} />
           ) : (
             <>
-              <p className="tabular leading-5 text-muted">
+              <p className="tabular leading-5 text-nav-muted">
                 {stats
                   ? `${stats.total_listings} Wasalt listings · ${stats.darglobal_pages} DarGlobal pages`
                   : 'DarGlobal and Wasalt public data'}
               </p>
-              <p className="mt-1 flex items-center gap-1.5 text-faint">
+              <p className="mt-1 flex items-center gap-1.5 text-nav-faint">
                 <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
                 {status.label}
               </p>
