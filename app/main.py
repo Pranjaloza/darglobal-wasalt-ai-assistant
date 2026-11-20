@@ -1,4 +1,5 @@
 from functools import lru_cache
+from threading import Lock
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
@@ -30,10 +31,22 @@ app.add_middleware(
 )
 
 
+_knowledge_lock = Lock()
+
+
 @lru_cache
-def get_knowledge() -> KnowledgeSearch:
-    """Load the vector DB and embedding model once, on first use."""
+def _build_knowledge() -> KnowledgeSearch:
     return KnowledgeSearch()
+
+
+def get_knowledge() -> KnowledgeSearch:
+    """Load the vector DB and embedding model once, on first use.
+
+    FastAPI runs sync endpoints in a thread pool, so the first requests can
+    arrive together; the lock makes sure only one of them builds it.
+    """
+    with _knowledge_lock:
+        return _build_knowledge()
 
 
 @app.exception_handler(ServiceError)

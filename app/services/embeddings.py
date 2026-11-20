@@ -7,6 +7,7 @@ onnxruntime instead of PyTorch, so the app fits in ~512 MB of RAM.
 
 from functools import lru_cache
 from pathlib import Path
+from threading import Lock
 
 import numpy as np
 from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
@@ -14,8 +15,16 @@ from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 from app import config
 
 
-@lru_cache
+_embedder_lock = Lock()
+
+
 def get_embedder() -> ONNXMiniLM_L6_V2:
+    with _embedder_lock:
+        return _build_embedder()
+
+
+@lru_cache
+def _build_embedder() -> ONNXMiniLM_L6_V2:
     # Keep the model inside a known folder so it can be baked into the Docker image.
     ONNXMiniLM_L6_V2.DOWNLOAD_PATH = Path(config.EMBEDDING_CACHE_DIR) / ONNXMiniLM_L6_V2.MODEL_NAME
     return ONNXMiniLM_L6_V2(preferred_providers=["CPUExecutionProvider"])

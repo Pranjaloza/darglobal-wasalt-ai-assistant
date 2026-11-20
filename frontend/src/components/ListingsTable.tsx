@@ -21,21 +21,23 @@ interface ListingsTableProps {
   properties: Property[]
   /** Hide the city column when every row is in the same city */
   compact?: boolean
+  /** Draw the outer border (off when the table sits inside a Card) */
+  bordered?: boolean
 }
 
 /**
  * Listings as a table on wide screens and as a stacked list on phones.
  * Figures use tabular numbers so prices line up.
  */
-function ListingsTable({ properties, compact = false }: ListingsTableProps) {
+function ListingsTable({ properties, compact = false, bordered = true }: ListingsTableProps) {
   const showCity = !compact || new Set(properties.map((p) => p.city)).size > 1
 
   return (
-    <div className="overflow-hidden rounded-md border border-line bg-surface">
+    <div className={`overflow-hidden bg-surface ${bordered ? 'rounded-md border border-line' : ''}`}>
       {/* Desktop / tablet */}
       <table className="tabular hidden w-full text-sm md:table">
         <thead>
-          <tr className="border-b border-line-strong bg-accent-soft text-left text-[11px] uppercase tracking-[0.08em] text-accent-hover">
+          <tr className="border-b border-line bg-paper text-left text-xs text-muted">
             <th className="px-4 py-2.5 font-medium">Listing</th>
             {showCity && <th className="px-3 py-2.5 font-medium">City</th>}
             <th className="px-3 py-2.5 font-medium">District</th>
