@@ -1,14 +1,3 @@
----
-title: DarGlobal & Wasalt AI Assistant
-emoji: 🏠
-colorFrom: gray
-colorTo: blue
-sdk: docker
-app_port: 8001
-pinned: false
-short_description: RAG chatbot over DarGlobal and Wasalt real estate data
----
-
 # DarGlobal & Wasalt AI Assistant
 
 An AI chatbot that answers questions about DarGlobal and Wasalt real estate. It has a FastAPI backend and a React frontend, uses a ChromaDB vector store for retrieval, and uses a free OpenRouter model for answers.
