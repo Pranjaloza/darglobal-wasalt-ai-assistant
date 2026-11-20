@@ -2,41 +2,41 @@
 
 @import "tailwindcss";
 
-/* Design tokens. Brand colours are taken from DarGlobal's own stylesheets
-   (darglobal.co.uk): navy #081c2a, bronze #6b5e43 / #887148, gold #ac936d,
-   pale blue-grey #d7e3eb, sand #e2d8ce, teal #033e4c, off-white #f8f8f8. */
+/* Design tokens: "Desert sand & terracotta".
+   Warm, Saudi-inspired: espresso navigation and hero, terracotta accent,
+   desert-gold figures on dark, sand-white pages. All text pairs meet
+   WCAG AA contrast (4.5:1). */
 @theme {
   --font-sans: 'Figtree', system-ui, sans-serif;
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   /* Main area */
-  --color-paper: #f8f8f8;
-  --color-panel: #efebe5;
-  --color-surface: #ffffff;
-  --color-ink: #081c2a;
-  --color-ink-2: #2f3c4c;
-  --color-muted: #54595f;
-  --color-faint: #697075;
-  --color-line: #e9e9e9;
-  --color-line-strong: #d6cfc4;
-  --color-accent: #6b5e43;
-  --color-accent-hover: #887148;
-  --color-accent-soft: #f2ede6;
-  --color-gold: #ac936d;
-  --color-teal: #033e4c;
+  --color-paper: #fbf6ef;
+  --color-panel: #f1e6d6;
+  --color-surface: #fffdf9;
+  --color-ink: #2b1d16;
+  --color-ink-2: #4a372c;
+  --color-muted: #6b5646;
+  --color-faint: #7a6656;
+  --color-line: #eadfcf;
+  --color-line-strong: #d9c7af;
+  --color-accent: #b5502e;
+  --color-accent-hover: #96401f;
+  --color-accent-soft: #f6e7dd;
+  --color-gold: #e3b26b;
   --color-danger: #9b2c2c;
-  --color-danger-soft: #f8eaea;
+  --color-danger-soft: #f9e9e6;
   --color-warn: #a16207;
 
-  /* Sidebar (DarGlobal navy) */
-  --color-nav: #081c2a;
-  --color-nav-text: #d7e3eb;
-  --color-nav-muted: #9eb2b6;
-  --color-nav-faint: #8196a0;
-  --color-nav-line: rgb(215 227 235 / 0.12);
-  --color-nav-hover: rgb(215 227 235 / 0.07);
-  --color-nav-active: rgb(215 227 235 / 0.12);
+  /* Navigation and hero (espresso) */
+  --color-nav: #2b1d16;
+  --color-nav-text: #f1e6d6;
+  --color-nav-muted: #cdb8a0;
+  --color-nav-faint: #af9781;
+  --color-nav-line: rgb(241 230 214 / 0.14);
+  --color-nav-hover: rgb(241 230 214 / 0.07);
+  --color-nav-active: rgb(241 230 214 / 0.12);
 
   --radius-sm: 4px;
   --radius-md: 6px;

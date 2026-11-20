@@ -19,7 +19,7 @@ interface SidebarProps {
 
 const STATUS: Record<ApiStatus, { dot: string; label: string }> = {
   checking: { dot: 'bg-warn', label: 'Connecting' },
-  online: { dot: 'bg-[#5fae8f]', label: 'Connected' },
+  online: { dot: 'bg-[#7fbf8f]', label: 'Connected' },
   offline: { dot: 'bg-danger', label: 'Offline' },
 }
 
@@ -172,7 +172,7 @@ function Sidebar({
                           </button>
                           <button
                             onClick={() => onDeleteConversation(conversation.id)}
-                            className="mr-1 rounded-sm p-1 text-nav-faint hover:text-[#f2a7a7] md:invisible md:group-hover:visible"
+                            className="mr-1 rounded-sm p-1 text-nav-faint hover:text-[#f0a58c] md:invisible md:group-hover:visible"
                             aria-label={`Delete: ${conversation.title}`}
                             title="Delete"
                           >

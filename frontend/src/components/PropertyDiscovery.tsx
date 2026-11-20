@@ -182,7 +182,7 @@ function PropertyDiscovery({ stats, onOpenMenu }: PropertyDiscoveryProps) {
         </section>
 
         <div className="mx-auto -mt-10 max-w-5xl px-4 pb-6 md:px-6">
-          <div className="relative grid grid-cols-2 gap-3 rounded-md border border-line bg-surface p-4 shadow-[0_8px_24px_rgb(8_28_42/0.08)] md:grid-cols-4">
+          <div className="relative grid grid-cols-2 gap-3 rounded-md border border-line bg-surface p-4 shadow-[0_8px_24px_rgb(43_29_22/0.08)] md:grid-cols-4">
             <Field label="City" value={city} onChange={setCity} options={cityOptions} />
             <Field label="Max price (SAR)" value={maxPrice} onChange={setMaxPrice} options={BUDGETS} />
             <Field label="Bedrooms" value={minBedrooms} onChange={setMinBedrooms} options={BEDROOMS} />

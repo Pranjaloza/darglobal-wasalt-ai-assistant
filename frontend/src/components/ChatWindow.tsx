@@ -92,7 +92,7 @@ function Answer({ message }: { message: ChatMessage }) {
   const shown = showAll ? properties : properties.slice(0, LISTINGS_PREVIEW)
 
   return (
-    <article className="rounded-md border border-line border-t-2 border-t-gold bg-surface px-5 py-4 shadow-[0_1px_2px_rgb(8_28_42/0.04)] md:px-6 md:py-5">
+    <article className="rounded-md border border-line border-t-2 border-t-gold bg-surface px-5 py-4 shadow-[0_1px_2px_rgb(43_29_22/0.04)] md:px-6 md:py-5">
       <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-accent">Answer</p>
       <Markdown content={message.content} />
 
