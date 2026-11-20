@@ -1,0 +1,13 @@
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+vector_db/
+scripts/debug/
+frontend/node_modules/
+frontend/dist/
+
+# Browser-saved page assets (third-party JS/CSS/images); the .html files are kept
+data/raw/darglobal_pages/*_files/
