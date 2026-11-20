@@ -4,6 +4,7 @@ import { compactSar, median } from '../format'
 import { searchProperties } from '../services/api'
 import type { DatasetStats, Property } from '../types'
 import ListingsTable from './ListingsTable'
+import QuestionBox from './QuestionBox'
 import { Card, CONTAINER, StatCard } from './ui'
 
 const EXAMPLES = [
@@ -47,13 +48,30 @@ function Overview({ stats, onAsk, onOpenListings, disabled }: OverviewProps) {
     .slice(0, 5)
 
   return (
-    <div className={`${CONTAINER} space-y-5 py-6`}>
-      <div>
-        <p className="text-sm text-muted">
-          Ask about Wasalt listings or DarGlobal&rsquo;s projects. Answers come only from the collected
-          data and link to their sources.
-        </p>
-      </div>
+    <div>
+      {/* Welcome hero: what this is, and the question box front and centre */}
+      <section className="bg-nav text-nav-text">
+        <div className={`${CONTAINER} py-8 md:py-10`}>
+          <h1 className="text-2xl font-semibold text-white md:text-[28px]">
+            Ask about DarGlobal projects or Wasalt listings
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-nav-muted">
+            Search {stats ? stats.total_listings : ''} collected Wasalt listings by city, budget and bedrooms,
+            or ask about DarGlobal&rsquo;s company and projects. Answers use only this data and link to their
+            sources. Follow-up questions such as &ldquo;what about Jeddah?&rdquo; build on the previous one.
+          </p>
+          <div className="mt-5 max-w-3xl">
+            <QuestionBox
+              size="large"
+              onSubmit={onAsk}
+              disabled={disabled}
+              placeholder="e.g. 5-bedroom villas in Madinah under 1.5 million SAR"
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className={`${CONTAINER} space-y-5 py-6`}>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
@@ -140,6 +158,7 @@ function Overview({ stats, onAsk, onOpenListings, disabled }: OverviewProps) {
           <p className="px-4 py-6 text-sm text-faint">Loading listings…</p>
         )}
       </Card>
+      </div>
     </div>
   )
 }

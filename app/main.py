@@ -77,7 +77,8 @@ def stats(knowledge: KnowledgeSearch = Depends(get_knowledge)):
 
 @app.post("/chat")
 def chat(request: ChatRequest, knowledge: KnowledgeSearch = Depends(get_knowledge)):
-    return answer_question(request.question.strip(), knowledge)
+    history = [message.model_dump() for message in request.history]
+    return answer_question(request.question.strip(), knowledge, history)
 
 
 @app.get("/properties")

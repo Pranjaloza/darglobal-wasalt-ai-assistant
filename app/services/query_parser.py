@@ -97,7 +97,7 @@ def convert_price(amount, unit):
 # MAIN FILTER EXTRACTION
 # --------------------------------------------------
 
-def extract_property_filters(question):
+def extract_property_filters(question, require_keyword=True):
     """
     Extract structured property filters from a user question.
 
@@ -109,7 +109,7 @@ def extract_property_filters(question):
     q = question.lower()
 
     # Check whether this is a property-related query.
-    if not any(keyword in q for keyword in PROPERTY_KEYWORDS):
+    if require_keyword and not any(keyword in q for keyword in PROPERTY_KEYWORDS):
         return None
 
     filters = {

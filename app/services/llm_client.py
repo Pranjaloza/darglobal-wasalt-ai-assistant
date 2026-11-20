@@ -4,7 +4,7 @@ from app import config
 from app.services.errors import ServiceError
 
 
-def chat_completion(system_prompt, user_prompt, temperature, max_tokens=None):
+def chat_completion(system_prompt, user_prompt, temperature, max_tokens=None, history=None):
     """Send a chat request to OpenRouter and return (answer, model).
 
     Retries once if the model returns no answer text, which happens when a
@@ -21,7 +21,8 @@ def chat_completion(system_prompt, user_prompt, temperature, max_tokens=None):
                 system_prompt,
                 user_prompt,
                 temperature,
-                max_tokens or config.LLM_MAX_TOKENS
+                max_tokens or config.LLM_MAX_TOKENS,
+                history or []
             )
         except EmptyAnswerError as error:
             last_error = error
@@ -33,7 +34,7 @@ class EmptyAnswerError(Exception):
     pass
 
 
-def _request_once(system_prompt, user_prompt, temperature, max_tokens):
+def _request_once(system_prompt, user_prompt, temperature, max_tokens, history):
     try:
         response = requests.post(
             config.OPENROUTER_URL,
@@ -46,6 +47,7 @@ def _request_once(system_prompt, user_prompt, temperature, max_tokens):
                 "model": config.OPENROUTER_MODEL,
                 "messages": [
                     {"role": "system", "content": system_prompt},
+                    *history,
                     {"role": "user", "content": user_prompt}
                 ],
                 "temperature": temperature,

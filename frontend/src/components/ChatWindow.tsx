@@ -1,9 +1,11 @@
-import { Check, Copy, CornerDownLeft, LoaderCircle, RotateCcw } from 'lucide-react'
+import { Check, Copy, LoaderCircle, RotateCcw } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { compactSar } from '../format'
 import type { ApiStatus, ChatMessage, DatasetStats } from '../types'
 import ListingsTable from './ListingsTable'
 import Markdown from './Markdown'
 import Overview from './Overview'
+import QuestionBox from './QuestionBox'
 import { CONTAINER, PageHeader } from './ui'
 
 interface ChatWindowProps {
@@ -29,6 +31,17 @@ const STATUS_TEXT: Record<ApiStatus, { text: string; className: string }> = {
 }
 
 const LISTINGS_PREVIEW = 5
+
+/** "Jeddah · under 2M SAR · 5+ bedrooms" from the backend's applied filters */
+function describeFilters(filters: Record<string, unknown> | null | undefined) {
+  if (!filters) return []
+  const parts: string[] = []
+  if (typeof filters.city === 'string') parts.push(filters.city)
+  if (typeof filters.max_price === 'number') parts.push(`under ${compactSar(filters.max_price)} SAR`)
+  if (typeof filters.min_bedrooms === 'number') parts.push(`${filters.min_bedrooms}+ bedrooms`)
+  if (typeof filters.exact_bedrooms === 'number') parts.push(`${filters.exact_bedrooms} bedrooms`)
+  return parts
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -56,6 +69,7 @@ function Answer({ message }: { message: ChatMessage }) {
   const properties = message.properties ?? []
   const sources = message.sources ?? []
   const shown = showAll ? properties : properties.slice(0, LISTINGS_PREVIEW)
+  const appliedFilters = describeFilters(message.filters)
 
   return (
     <article className="rounded-md border border-line bg-surface">
@@ -65,10 +79,17 @@ function Answer({ message }: { message: ChatMessage }) {
 
       {properties.length > 0 && (
         <section className="border-t border-line">
-          <div className="flex items-center justify-between px-4 py-2.5">
-            <h3 className="text-xs font-semibold text-ink">
-              Matching listings <span className="tabular font-normal text-muted">({properties.length})</span>
-            </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <h3 className="mr-1 text-xs font-semibold text-ink">
+                Matching listings <span className="tabular font-normal text-muted">({properties.length})</span>
+              </h3>
+              {appliedFilters.map((part) => (
+                <span key={part} className="rounded-sm bg-accent-soft px-1.5 py-0.5 text-[11px] text-accent-hover">
+                  {part}
+                </span>
+              ))}
+            </div>
             {properties.length > LISTINGS_PREVIEW && (
               <button onClick={() => setShowAll((value) => !value)} className="text-xs text-accent hover:underline">
                 {showAll ? 'Show fewer' : `Show all ${properties.length}`}
@@ -122,9 +143,7 @@ function ChatWindow({
   onOpenMenu,
   onOpenListings,
 }: ChatWindowProps) {
-  const [question, setQuestion] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
   const status = STATUS_TEXT[apiStatus]
   const isEmpty = messages.length === 0
 
@@ -132,15 +151,10 @@ function ChatWindow({
     if (!isEmpty) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isThinking, error, isEmpty])
 
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [title])
-
-  const handleSubmit = (value = question) => {
+  const handleSubmit = (value: string) => {
     const trimmed = value.trim()
     if (!trimmed || isLoading) return
     onSendMessage(trimmed)
-    setQuestion('')
   }
 
   return (
@@ -194,49 +208,25 @@ function ChatWindow({
         )}
       </main>
 
-      <div className="shrink-0 border-t border-line bg-surface py-3">
-        <div className={CONTAINER}>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              handleSubmit()
-            }}
-            className="flex items-end gap-2 rounded-md border border-line-strong bg-surface p-1.5 focus-within:border-accent"
-          >
-            <textarea
-              ref={inputRef}
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  handleSubmit()
-                }
-              }}
+      {!isEmpty && (
+        <div className="shrink-0 border-t border-line bg-surface py-3">
+          <div className={CONTAINER}>
+            <QuestionBox
+              onSubmit={handleSubmit}
+              disabled={isLoading}
+              focusKey={title}
               placeholder={
                 isLoading && !isThinking
                   ? 'Waiting for an answer in another conversation…'
-                  : 'Ask about a property, budget, district or DarGlobal project'
+                  : 'Ask a follow-up, e.g. “what about Jeddah?” or “only under 1.5M”'
               }
-              rows={1}
-              maxLength={1000}
-              disabled={isLoading}
-              className="max-h-40 min-h-9 flex-1 resize-none bg-transparent px-2.5 py-1.5 text-sm leading-6 outline-none placeholder:text-faint focus-visible:outline-none [field-sizing:content]"
             />
-            <button
-              type="submit"
-              disabled={!question.trim() || isLoading}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm bg-accent px-3.5 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-line-strong"
-            >
-              Send
-              <CornerDownLeft size={14} className="hidden opacity-70 sm:block" />
-            </button>
-          </form>
-          <p className="mt-1.5 text-xs text-faint">
-            Based on public listing data collected for this project. Prices and availability may have changed.
-          </p>
+            <p className="mt-1.5 text-xs text-faint">
+              Based on public listing data collected for this project. Prices and availability may have changed.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

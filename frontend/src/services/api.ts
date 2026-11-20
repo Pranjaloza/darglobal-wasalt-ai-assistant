@@ -2,6 +2,7 @@ import axios from 'axios'
 import type {
   ChatRequest,
   ChatResponse,
+  HistoryMessage,
   DatasetStats,
   PropertyFilters,
   PropertySearchResponse,
@@ -21,9 +22,10 @@ const api = axios.create({
 })
 
 export const sendChatMessage = async (
-  question: string
+  question: string,
+  history: HistoryMessage[] = []
 ): Promise<ChatResponse> => {
-  const payload: ChatRequest = { question }
+  const payload: ChatRequest = { question, history }
   const response = await api.post<ChatResponse>('/chat', payload)
   return response.data
 }

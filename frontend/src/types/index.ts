@@ -34,12 +34,21 @@ export interface ChatMessage {
   properties?: Property[]
   sources?: Source[]
   model?: string
+  /** Property filters the backend applied (property searches only) */
+  filters?: Record<string, unknown> | null
   // ISO string, so conversations can be saved to localStorage
   timestamp: string
 }
 
+export interface HistoryMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export interface ChatRequest {
   question: string
+  /** Recent messages from the same conversation, oldest first */
+  history?: HistoryMessage[]
 }
 
 export interface Conversation {

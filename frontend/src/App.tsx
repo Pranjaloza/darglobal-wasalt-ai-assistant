@@ -6,7 +6,14 @@ import Sidebar from './components/Sidebar'
 import { useApiStatus } from './hooks/useApiStatus'
 import { useConversations } from './hooks/useConversations'
 import { getDatasetStats, sendChatMessage } from './services/api'
-import type { ChatMessage, DatasetStats, View } from './types'
+import type { ChatMessage, DatasetStats, HistoryMessage, View } from './types'
+
+// How many earlier messages are sent with each question (for follow-ups)
+const HISTORY_LIMIT = 6
+
+function toHistory(messages: ChatMessage[]): HistoryMessage[] {
+  return messages.slice(-HISTORY_LIMIT).map(({ role, content }) => ({ role, content }))
+}
 
 const SIDEBAR_KEY = 'estate-intelligence:sidebar-collapsed'
 
@@ -67,12 +74,12 @@ function App() {
 
   const isLoading = pendingId !== undefined
 
-  const requestAnswer = async (conversationId: string, question: string) => {
+  const requestAnswer = async (conversationId: string, question: string, history: HistoryMessage[]) => {
     setPendingId(conversationId)
     setFailure(null)
 
     try {
-      const response = await sendChatMessage(question)
+      const response = await sendChatMessage(question, history)
 
       addMessage(conversationId, {
         id: crypto.randomUUID(),
@@ -81,6 +88,7 @@ function App() {
         properties: response.properties ?? [],
         sources: response.sources ?? [],
         model: response.model,
+        filters: response.filters ?? null,
         timestamp: new Date().toISOString(),
       })
     } catch (err) {
@@ -100,13 +108,19 @@ function App() {
       timestamp: new Date().toISOString(),
     }
 
+    // Earlier messages in this conversation, before the new question
+    const history = toHistory(active?.messages ?? [])
+
     const conversationId = addMessage(activeId, userMessage)
     setActiveId(conversationId)
-    requestAnswer(conversationId, text)
+    requestAnswer(conversationId, text, history)
   }
 
   const handleRetry = () => {
-    if (failure && !isLoading) requestAnswer(failure.conversationId, failure.question)
+    if (!failure || isLoading) return
+    // Everything before the failed question (which is the last message)
+    const messages = conversations.find((c) => c.id === failure.conversationId)?.messages ?? []
+    requestAnswer(failure.conversationId, failure.question, toHistory(messages.slice(0, -1)))
   }
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
