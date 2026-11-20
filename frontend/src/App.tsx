@@ -133,7 +133,7 @@ function App() {
   const visibleError = failure && failure.conversationId === activeId ? failure.message : ''
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#F7F8FA]">
+    <div className="flex h-dvh overflow-hidden bg-paper text-ink">
       <Sidebar
         view={view}
         onChangeView={handleChangeView}
@@ -160,6 +160,7 @@ function App() {
           isThinking={showLoading}
           error={visibleError}
           apiStatus={apiStatus}
+          stats={stats}
           onOpenMenu={() => setMobileMenuOpen(true)}
         />
       ) : (

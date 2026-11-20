@@ -1,20 +1,8 @@
-import {
-  ArrowUp,
-  Building2,
-  Check,
-  Copy,
-  ExternalLink,
-  Globe2,
-  LoaderCircle,
-  Menu,
-  RotateCcw,
-  Search,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowRight, Check, Copy, CornerDownLeft, LoaderCircle, Menu, RotateCcw } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import type { ApiStatus, ChatMessage } from '../types'
+import type { ApiStatus, ChatMessage, DatasetStats } from '../types'
+import ListingsTable from './ListingsTable'
 import Markdown from './Markdown'
-import PropertyCard from './PropertyCard'
 
 interface ChatWindowProps {
   title: string
@@ -27,37 +15,24 @@ interface ChatWindowProps {
   isThinking: boolean
   error: string
   apiStatus: ApiStatus
+  stats: DatasetStats | null
   onOpenMenu: () => void
 }
 
-const STATUS_BADGE: Record<ApiStatus, { wrap: string; dot: string; label: string }> = {
-  checking: { wrap: 'border-amber-100 bg-amber-50 text-amber-700', dot: 'bg-amber-400', label: 'Connecting…' },
-  online: { wrap: 'border-green-100 bg-green-50 text-green-700', dot: 'bg-green-500', label: 'Assistant ready' },
-  offline: { wrap: 'border-red-100 bg-red-50 text-red-700', dot: 'bg-red-500', label: 'Backend offline' },
+const STATUS_TEXT: Record<ApiStatus, { text: string; className: string }> = {
+  checking: { text: 'Connecting…', className: 'text-warn' },
+  online: { text: '', className: '' },
+  offline: { text: 'Server offline', className: 'text-danger' },
 }
 
-const SUGGESTIONS = [
-  {
-    icon: Building2,
-    title: 'Explore properties',
-    description: 'Find properties by location and budget',
-    prompt: 'Show me properties in Madinah',
-  },
-  {
-    icon: Search,
-    title: 'Smart property search',
-    description: 'Search by price and bedrooms',
-    prompt: 'Find villas below 2 million SAR with at least 5 bedrooms',
-  },
-  {
-    icon: Globe2,
-    title: 'Discover DarGlobal',
-    description: 'Explore projects and company information',
-    prompt: 'Tell me about DarGlobal and its projects',
-  },
+const EXAMPLES = [
+  'Find villas in Madinah below 2 million SAR with at least 5 bedrooms',
+  'Show me properties in Jeddah with more than 5 bedrooms',
+  'What does DarGlobal do, and which countries does it build in?',
+  'Compare the cheapest 6-bedroom listings in Madinah',
 ]
 
-const CARDS_PREVIEW = 4
+const LISTINGS_PREVIEW = 5
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -73,74 +48,115 @@ function CopyButton({ text }: { text: string }) {
   }
 
   return (
-    <button
-      onClick={copy}
-      className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-400 transition hover:bg-gray-100 hover:text-[#172033]"
-    >
-      {copied ? <Check size={13} /> : <Copy size={13} />}
+    <button onClick={copy} className="inline-flex items-center gap-1 hover:text-ink">
+      {copied ? <Check size={12} /> : <Copy size={12} />}
       {copied ? 'Copied' : 'Copy'}
     </button>
   )
 }
 
-function AssistantMessage({ message }: { message: ChatMessage }) {
-  const [showAllCards, setShowAllCards] = useState(false)
+function Answer({ message }: { message: ChatMessage }) {
+  const [showAll, setShowAll] = useState(false)
   const properties = message.properties ?? []
   const sources = message.sources ?? []
-  const visibleCards = showAllCards ? properties : properties.slice(0, CARDS_PREVIEW)
+  const shown = showAll ? properties : properties.slice(0, LISTINGS_PREVIEW)
 
   return (
-    <div className="flex justify-start">
-      <div className="w-full max-w-full md:max-w-[92%]">
-        <div className="rounded-2xl rounded-bl-sm border border-gray-200 bg-white px-5 py-4">
-          <Markdown content={message.content} />
+    <article>
+      <Markdown content={message.content} />
 
-          <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2">
-            <span className="truncate text-[11px] text-gray-400">
-              {message.model ? `Answered by ${message.model}` : ''}
-            </span>
-            <CopyButton text={message.content} />
-          </div>
-        </div>
+      {properties.length > 0 && (
+        <section className="mt-5">
+          <h3 className="mb-2 text-xs font-medium text-muted">
+            Matching listings <span className="tabular">({properties.length})</span>
+          </h3>
+          <ListingsTable properties={shown} compact />
+          {properties.length > LISTINGS_PREVIEW && (
+            <button
+              onClick={() => setShowAll((value) => !value)}
+              className="mt-2 text-xs text-accent hover:underline"
+            >
+              {showAll ? 'Show fewer' : `Show all ${properties.length}`}
+            </button>
+          )}
+        </section>
+      )}
 
-        {properties.length > 0 && (
-          <div className="mt-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {visibleCards.map((property, index) => (
-                <PropertyCard key={`${property.source_url}-${index}`} property={property} />
-              ))}
-            </div>
-
-            {properties.length > CARDS_PREVIEW && (
-              <button
-                onClick={() => setShowAllCards((value) => !value)}
-                className="mt-3 text-xs font-semibold text-[#A9874C] hover:underline"
-              >
-                {showAllCards ? 'Show fewer listings' : `Show all ${properties.length} listings`}
-              </button>
-            )}
-          </div>
-        )}
-
-        {sources.length > 0 && properties.length === 0 && (
-          <div className="mt-3 rounded-xl border border-gray-200 bg-white p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Sources</p>
-            <div className="space-y-1.5">
-              {sources.map((source, index) => (
+      {sources.length > 0 && properties.length === 0 && (
+        <section className="mt-5 border-t border-line pt-3">
+          <h3 className="mb-1.5 text-xs font-medium text-muted">Sources</h3>
+          <ol className="space-y-1 text-xs">
+            {sources.map((source, index) => (
+              <li key={`${source.url}-${index}`} className="flex gap-2">
+                <span className="tabular w-4 shrink-0 text-faint">{index + 1}.</span>
                 <a
-                  key={`${source.url}-${index}`}
                   href={source.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-[#A9874C] hover:underline"
+                  className="min-w-0 truncate text-ink-2 underline decoration-line-strong underline-offset-2 hover:text-accent hover:decoration-accent"
                 >
-                  <ExternalLink size={13} className="shrink-0" />
-                  <span className="truncate">{source.title || source.company || 'View source'}</span>
+                  {source.title || source.url}
                 </a>
-              ))}
-            </div>
-          </div>
+                {source.company && <span className="shrink-0 text-faint">{source.company}</span>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      <footer className="mt-3 flex items-center gap-3 text-xs text-faint">
+        <CopyButton text={message.content} />
+        {message.model && <span className="truncate">{message.model}</span>}
+      </footer>
+    </article>
+  )
+}
+
+function EmptyState({
+  stats,
+  onPick,
+  disabled,
+}: {
+  stats: DatasetStats | null
+  onPick: (question: string) => void
+  disabled: boolean
+}) {
+  const cities = stats?.cities.map((c) => c.name).join(' and ')
+
+  return (
+    <div className="mx-auto w-full max-w-2xl pt-6 md:pt-16">
+      <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
+        Ask about DarGlobal projects or Wasalt listings
+      </h1>
+      <p className="mt-2 max-w-xl text-sm leading-6 text-ink-2">
+        {stats ? (
+          <>
+            Answers draw on <span className="tabular">{stats.total_listings}</span> Wasalt listings in{' '}
+            {cities} and <span className="tabular">{stats.darglobal_pages}</span> pages from DarGlobal's
+            website. Property questions are matched against listing prices, bedrooms and location; each
+            answer links back to its sources.
+          </>
+        ) : (
+          'Answers draw on collected Wasalt listings and pages from DarGlobal’s website, and link back to their sources.'
         )}
+      </p>
+
+      <div className="mt-8">
+        <p className="mb-2 text-xs font-medium text-muted">Examples</p>
+        <ul className="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+          {EXAMPLES.map((example) => (
+            <li key={example}>
+              <button
+                onClick={() => onPick(example)}
+                disabled={disabled}
+                className="group flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm text-ink-2 hover:bg-paper hover:text-ink disabled:opacity-50"
+              >
+                {example}
+                <ArrowRight size={15} className="shrink-0 text-faint group-hover:text-accent" />
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   )
@@ -155,18 +171,18 @@ function ChatWindow({
   isThinking,
   error,
   apiStatus,
+  stats,
   onOpenMenu,
 }: ChatWindowProps) {
   const [question, setQuestion] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const badge = STATUS_BADGE[apiStatus]
+  const status = STATUS_TEXT[apiStatus]
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading, error])
+  }, [messages, isThinking, error])
 
-  // Focus the input when switching to another / a new conversation
   useEffect(() => {
     inputRef.current?.focus()
   }, [title])
@@ -179,100 +195,51 @@ function ChatWindow({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <header className="flex h-[76px] shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 md:px-8">
-        <div className="flex min-w-0 items-center gap-3">
-          <button
-            onClick={onOpenMenu}
-            className="rounded-lg p-2 text-[#172033] hover:bg-gray-100 md:hidden"
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="min-w-0">
-            <h2 className="truncate font-semibold text-[#172033]">{title}</h2>
-            <p className="text-xs text-gray-500">Your intelligent real estate companion</p>
-          </div>
-        </div>
-
-        <div className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 ${badge.wrap}`}>
-          <span className={`h-2 w-2 rounded-full ${badge.dot}`} />
-          <span className="hidden text-xs font-medium sm:inline">{badge.label}</span>
-        </div>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-paper">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-paper px-4 md:px-6">
+        <button
+          onClick={onOpenMenu}
+          className="-ml-1 rounded-sm p-1.5 text-ink-2 hover:bg-line md:hidden"
+          aria-label="Open menu"
+        >
+          <Menu size={19} />
+        </button>
+        <h2 className="min-w-0 flex-1 truncate text-sm font-medium">{title}</h2>
+        {status.text && <span className={`shrink-0 text-xs ${status.className}`}>{status.text}</span>}
       </header>
 
-      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-8 md:px-6">
+      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-6">
         {messages.length === 0 ? (
-          <div className="my-auto w-full max-w-3xl self-center">
-            <div className="mb-10 text-center">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#172033] shadow-lg shadow-gray-300">
-                <Sparkles size={30} className="text-[#C6A66B]" />
-              </div>
-
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[3px] text-[#B08B4A]">
-                ESTATE INTELLIGENCE
-              </p>
-
-              <h1 className="font-['Manrope'] text-3xl font-bold tracking-tight text-[#172033] md:text-4xl">
-                Find your next
-                <span className="block text-[#B08B4A]">great opportunity.</span>
-              </h1>
-
-              <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-gray-500">
-                Discover properties, explore DarGlobal projects, and get intelligent real estate
-                insights through natural conversation.
-              </p>
-            </div>
-
-            <div className="mb-8 grid gap-3 md:grid-cols-3">
-              {SUGGESTIONS.map((item) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.title}
-                    onClick={() => handleSubmit(item.prompt)}
-                    disabled={isLoading}
-                    className="group rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:-translate-y-1 hover:border-[#C6A66B] hover:shadow-lg disabled:opacity-50"
-                  >
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#F7F3EB] text-[#A9874C]">
-                      <Icon size={19} />
-                    </div>
-                    <h3 className="mb-2 text-sm font-semibold text-[#172033]">{item.title}</h3>
-                    <p className="text-xs leading-5 text-gray-500">{item.description}</p>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          <EmptyState stats={stats} onPick={handleSubmit} disabled={isLoading} />
         ) : (
-          <div className="mx-auto w-full max-w-3xl space-y-7">
+          <div className="mx-auto w-full max-w-3xl space-y-8">
             {messages.map((message) =>
               message.role === 'user' ? (
                 <div key={message.id} className="flex justify-end">
-                  <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-[#172033] px-5 py-3.5 text-sm leading-7 text-white">
+                  <p className="max-w-[85%] whitespace-pre-wrap rounded-md bg-panel px-4 py-2.5 text-sm leading-6 text-ink">
                     {message.content}
-                  </div>
+                  </p>
                 </div>
               ) : (
-                <AssistantMessage key={message.id} message={message} />
+                <Answer key={message.id} message={message} />
               )
             )}
 
             {isThinking && (
-              <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 text-sm text-gray-500">
-                <LoaderCircle size={18} className="animate-spin text-[#A9874C]" />
-                Searching the knowledge base and writing an answer…
-              </div>
+              <p className="flex items-center gap-2 text-sm text-muted">
+                <LoaderCircle size={15} className="animate-spin" />
+                Searching the data and drafting an answer — free models can take up to a minute.
+              </p>
             )}
 
             {error && !isThinking && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-100 bg-red-50 px-5 py-4">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-danger/20 bg-danger-soft px-4 py-3">
+                <p className="text-sm text-danger">{error}</p>
                 <button
                   onClick={onRetry}
-                  className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition hover:bg-red-100"
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-danger/30 bg-surface px-2.5 py-1 text-xs text-danger hover:bg-danger-soft"
                 >
-                  <RotateCcw size={13} />
+                  <RotateCcw size={12} />
                   Retry
                 </button>
               </div>
@@ -283,56 +250,46 @@ function ChatWindow({
         )}
       </main>
 
-      <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-4 md:px-6 md:py-5">
-        <div className="mx-auto max-w-3xl">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              handleSubmit()
-            }}
-            className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition focus-within:border-[#C6A66B] focus-within:shadow-md"
-          >
-            <textarea
-              ref={inputRef}
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  handleSubmit()
-                }
-              }}
-              placeholder={
-                isLoading && !isThinking
-                  ? 'Waiting for an answer in another conversation…'
-                  : 'Ask anything about properties, locations or DarGlobal...'
+      <div className="shrink-0 border-t border-line bg-paper px-4 pb-4 pt-3 md:px-6">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            handleSubmit()
+          }}
+          className="mx-auto flex max-w-3xl items-end gap-2 rounded-md border border-line-strong bg-surface p-2 focus-within:border-accent"
+        >
+          <textarea
+            ref={inputRef}
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                handleSubmit()
               }
-              rows={2}
-              maxLength={1000}
-              disabled={isLoading}
-              className="w-full resize-none border-0 bg-transparent px-3 py-2 text-sm text-[#172033] outline-none placeholder:text-gray-400"
-            />
-
-            <div className="flex items-center justify-between px-2">
-              <span className="text-xs text-gray-400">
-                <span className="hidden sm:inline">Enter to send · Shift+Enter for a new line</span>
-              </span>
-
-              <button
-                type="submit"
-                disabled={!question.trim() || isLoading}
-                aria-label="Send message"
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#172033] text-white transition hover:bg-[#B08B4A] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <ArrowUp size={19} />
-              </button>
-            </div>
-          </form>
-
-          <p className="mt-3 text-center text-xs text-gray-400">
-            Answers are based on collected public DarGlobal and Wasalt data and may not reflect live availability.
-          </p>
-        </div>
+            }}
+            placeholder={
+              isLoading && !isThinking
+                ? 'Waiting for an answer in another conversation…'
+                : 'Ask about a property, budget, district or DarGlobal project'
+            }
+            rows={1}
+            maxLength={1000}
+            disabled={isLoading}
+            className="max-h-40 min-h-9 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-6 outline-none placeholder:text-faint focus-visible:outline-none [field-sizing:content]"
+          />
+          <button
+            type="submit"
+            disabled={!question.trim() || isLoading}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm bg-accent px-3 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-line-strong"
+          >
+            Send
+            <CornerDownLeft size={14} className="hidden opacity-70 sm:block" />
+          </button>
+        </form>
+        <p className="mx-auto mt-2 max-w-3xl text-xs text-faint">
+          Based on public listing data collected for this project. Prices and availability may have changed.
+        </p>
       </div>
     </div>
   )

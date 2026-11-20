@@ -1,13 +1,4 @@
-import {
-  Building2,
-  MessageSquare,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Plus,
-  Search,
-  Trash2,
-  X,
-} from 'lucide-react'
+import { List, MessageSquareText, PanelLeftClose, PanelLeftOpen, Plus, Trash2, X } from 'lucide-react'
 import type { ApiStatus, Conversation, DatasetStats, View } from '../types'
 
 interface SidebarProps {
@@ -26,18 +17,31 @@ interface SidebarProps {
   stats: DatasetStats | null
 }
 
-function timeAgo(iso: string) {
-  const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
-  if (seconds < 60) return 'just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
+const STATUS: Record<ApiStatus, { dot: string; label: string }> = {
+  checking: { dot: 'bg-warn', label: 'Connecting' },
+  online: { dot: 'bg-accent', label: 'Connected' },
+  offline: { dot: 'bg-danger', label: 'Offline' },
 }
 
-const STATUS_STYLES: Record<ApiStatus, { dot: string; label: string }> = {
-  checking: { dot: 'bg-amber-400', label: 'Connecting…' },
-  online: { dot: 'bg-green-400', label: 'Online' },
-  offline: { dot: 'bg-red-400', label: 'Offline' },
+function groupByDate(conversations: Conversation[]) {
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+  const today = startOfToday.getTime()
+  const weekAgo = today - 6 * 86_400_000
+
+  const groups: { label: string; items: Conversation[] }[] = [
+    { label: 'Today', items: [] },
+    { label: 'Previous 7 days', items: [] },
+    { label: 'Older', items: [] },
+  ]
+
+  for (const conversation of conversations) {
+    const time = new Date(conversation.updatedAt).getTime()
+    const index = time >= today ? 0 : time >= weekAgo ? 1 : 2
+    groups[index].items.push(conversation)
+  }
+
+  return groups.filter((group) => group.items.length > 0)
 }
 
 function Sidebar({
@@ -55,183 +59,162 @@ function Sidebar({
   apiStatus,
   stats,
 }: SidebarProps) {
-  const navItems: { id: View; label: string; icon: typeof MessageSquare }[] = [
-    { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
-    { id: 'discovery', label: 'Property discovery', icon: Search },
+  const navItems: { id: View; label: string; icon: typeof List }[] = [
+    { id: 'chat', label: 'Ask', icon: MessageSquareText },
+    { id: 'discovery', label: 'Listings', icon: List },
   ]
-  const status = STATUS_STYLES[apiStatus]
-
-  // On phones the sidebar is a drawer and never collapses to icons
+  const status = STATUS[apiStatus]
   const iconOnly = collapsed && !mobileOpen
 
   return (
     <>
-      {/* Mobile backdrop */}
       <div
         onClick={onCloseMobile}
-        className={`fixed inset-0 z-30 bg-black/40 transition-opacity md:hidden ${
+        className={`fixed inset-0 z-30 bg-ink/30 transition-opacity md:hidden ${
           mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-full flex-col bg-[#111827] py-6 text-white transition-all duration-200 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-full flex-col border-r border-line bg-panel transition-[width,transform] duration-200 md:static md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${iconOnly ? 'w-[76px] px-3' : 'w-[270px] px-5'}`}
+        } ${iconOnly ? 'w-14' : 'w-64'}`}
       >
-        {/* Brand + collapse */}
-        <div className={`mb-8 flex items-center ${iconOnly ? 'flex-col gap-4' : 'gap-3'}`}>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#C6A66B]">
-            <Building2 size={22} className="text-[#111827]" />
-          </div>
-
+        {/* Header */}
+        <div className={`flex h-14 shrink-0 items-center border-b border-line ${iconOnly ? 'justify-center' : 'justify-between px-4'}`}>
           {!iconOnly && (
-            <div className="min-w-0 flex-1">
-              <h1 className="whitespace-nowrap text-sm font-bold tracking-wide">ESTATE INTELLIGENCE</h1>
-              <p className="text-[10px] tracking-[2px] text-gray-400">AI REAL ESTATE ASSISTANT</p>
+            <div className="min-w-0 leading-tight">
+              <p className="text-sm font-semibold">DarGlobal · Wasalt</p>
+              <p className="text-xs text-muted">Property research</p>
             </div>
           )}
 
           <button
             onClick={onCloseMobile}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-white/10 hover:text-white md:hidden"
+            className="rounded-sm p-1.5 text-muted hover:bg-line hover:text-ink md:hidden"
             aria-label="Close menu"
           >
-            <X size={18} />
+            <X size={17} />
           </button>
-
-          {iconOnly && (
-            <button
-              onClick={onToggleCollapsed}
-              className="hidden rounded-lg p-1.5 text-gray-400 hover:bg-white/10 hover:text-white md:block"
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
-            >
-              <PanelLeftOpen size={17} />
-            </button>
-          )}
+          <button
+            onClick={onToggleCollapsed}
+            className="hidden rounded-sm p-1.5 text-muted hover:bg-line hover:text-ink md:block"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+          </button>
         </div>
 
-        <button
-          onClick={onNewChat}
-          title="New conversation"
-          className={`mb-8 flex items-center justify-center gap-2 rounded-xl bg-[#C6A66B] font-semibold text-[#111827] transition hover:bg-[#d6b980] ${
-            iconOnly ? 'h-11 w-11 self-center' : 'px-4 py-3'
-          }`}
-        >
-          <Plus size={18} />
-          {!iconOnly && 'New conversation'}
-        </button>
-
         {/* Navigation */}
-        {!iconOnly && (
-          <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-gray-500">
-            <span>Workspace</span>
-            <button
-              onClick={onToggleCollapsed}
-              className="hidden rounded-md p-1 text-gray-500 hover:bg-white/10 hover:text-white md:block"
-              aria-label="Collapse sidebar"
-              title="Collapse sidebar"
-            >
-              <PanelLeftClose size={15} />
-            </button>
-          </div>
-        )}
-
-        <nav className="space-y-1.5">
+        <nav className={`shrink-0 space-y-0.5 pt-3 ${iconOnly ? 'px-2' : 'px-3'}`}>
           {navItems.map(({ id, label, icon: Icon }) => {
-            const isActive = view === id
+            const active = view === id
             return (
               <button
                 key={id}
                 onClick={() => onChangeView(id)}
                 title={label}
-                className={`flex w-full items-center gap-3 rounded-lg py-3 text-sm transition ${
-                  iconOnly ? 'justify-center' : 'px-3'
-                } ${
-                  isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
+                className={`flex w-full items-center gap-2.5 rounded-md py-1.5 text-sm ${
+                  iconOnly ? 'justify-center' : 'px-2.5'
+                } ${active ? 'bg-surface font-medium text-ink shadow-[0_0_0_1px_var(--color-line)]' : 'text-ink-2 hover:bg-line/60'}`}
               >
-                <Icon size={17} className="shrink-0" />
-                {!iconOnly && <span className="truncate text-left">{label}</span>}
+                <Icon size={16} className={`shrink-0 ${active ? 'text-accent' : 'text-muted'}`} />
+                {!iconOnly && label}
+                {!iconOnly && id === 'discovery' && stats && (
+                  <span className="tabular ml-auto text-xs text-faint">{stats.total_listings}</span>
+                )}
               </button>
             )
           })}
         </nav>
 
-        {/* Conversation history */}
-        {!iconOnly && (
-          <>
-            <div className="mb-2 mt-8 text-xs font-semibold uppercase tracking-wider text-gray-500">
-              Recent conversations
+        {/* History */}
+        {!iconOnly ? (
+          <div className="mt-4 flex min-h-0 flex-1 flex-col border-t border-line">
+            <div className="flex items-center justify-between px-4 pb-1 pt-3">
+              <span className="text-xs font-medium text-muted">History</span>
+              <button
+                onClick={onNewChat}
+                className="flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs text-accent hover:bg-accent-soft"
+              >
+                <Plus size={13} />
+                New
+              </button>
             </div>
 
-            <div className="-mx-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto px-1">
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
               {conversations.length === 0 ? (
-                <p className="px-3 py-2 text-xs leading-5 text-gray-500">
-                  Your conversations will appear here.
+                <p className="px-2.5 py-2 text-xs leading-5 text-faint">
+                  Questions you ask are kept here, in this browser only.
                 </p>
               ) : (
-                conversations.map((conversation) => {
-                  const isActive = view === 'chat' && conversation.id === activeId
-                  return (
-                    <div
-                      key={conversation.id}
-                      className={`group flex items-center rounded-lg transition ${
-                        isActive ? 'bg-white/10' : 'hover:bg-white/5'
-                      }`}
-                    >
-                      <button
-                        onClick={() => onSelectConversation(conversation.id)}
-                        className="min-w-0 flex-1 px-3 py-2 text-left"
-                      >
-                        <p className={`truncate text-sm ${isActive ? 'text-white' : 'text-gray-300'}`}>
-                          {conversation.title}
-                        </p>
-                        <p className="text-[11px] text-gray-500">{timeAgo(conversation.updatedAt)}</p>
-                      </button>
-
-                      <button
-                        onClick={() => onDeleteConversation(conversation.id)}
-                        className="mr-1 rounded-md p-1.5 text-gray-500 opacity-100 transition hover:bg-white/10 hover:text-red-300 md:opacity-0 md:group-hover:opacity-100"
-                        aria-label={`Delete conversation: ${conversation.title}`}
-                        title="Delete conversation"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )
-                })
+                groupByDate(conversations).map((group) => (
+                  <div key={group.label} className="mt-2">
+                    <p className="px-2.5 pb-1 text-[11px] uppercase tracking-wide text-faint">{group.label}</p>
+                    {group.items.map((conversation) => {
+                      const active = view === 'chat' && conversation.id === activeId
+                      return (
+                        <div
+                          key={conversation.id}
+                          className={`group flex items-center rounded-md ${
+                            active ? 'bg-surface shadow-[0_0_0_1px_var(--color-line)]' : 'hover:bg-line/60'
+                          }`}
+                        >
+                          <button
+                            onClick={() => onSelectConversation(conversation.id)}
+                            title={conversation.title}
+                            className={`min-w-0 flex-1 truncate px-2.5 py-1.5 text-left text-sm ${
+                              active ? 'text-ink' : 'text-ink-2'
+                            }`}
+                          >
+                            {conversation.title}
+                          </button>
+                          <button
+                            onClick={() => onDeleteConversation(conversation.id)}
+                            className="mr-1 rounded-sm p-1 text-faint hover:text-danger md:invisible md:group-hover:visible"
+                            aria-label={`Delete: ${conversation.title}`}
+                            title="Delete"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))
               )}
             </div>
-          </>
+          </div>
+        ) : (
+          <div className="flex flex-1 justify-center pt-3">
+            <button
+              onClick={onNewChat}
+              className="h-8 w-8 rounded-md text-muted hover:bg-line hover:text-ink"
+              aria-label="New question"
+              title="New question"
+            >
+              <Plus size={16} className="mx-auto" />
+            </button>
+          </div>
         )}
 
-        {/* Live status + dataset summary */}
-        <div className={`mt-auto border-t border-white/10 pt-5 ${iconOnly ? 'flex justify-center' : ''}`}>
+        {/* Footer: data source + connection */}
+        <div className={`shrink-0 border-t border-line py-3 text-xs ${iconOnly ? 'flex justify-center' : 'px-4'}`}>
           {iconOnly ? (
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${status.dot}`}
-              title={`Backend: ${status.label}`}
-            />
+            <span className={`h-2 w-2 rounded-full ${status.dot}`} title={status.label} />
           ) : (
-            <div className="rounded-xl bg-white/5 p-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">Knowledge base</p>
-                <span className="flex items-center gap-1.5 text-xs text-gray-400">
-                  <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-                  {status.label}
-                </span>
-              </div>
-
-              <p className="mt-1.5 text-xs leading-5 text-gray-500">
+            <>
+              <p className="tabular leading-5 text-muted">
                 {stats
-                  ? `${stats.total_listings} Wasalt listings in ${stats.cities.length} cities · ${stats.darglobal_pages} DarGlobal pages`
-                  : 'DarGlobal & Wasalt public data'}
+                  ? `${stats.total_listings} Wasalt listings · ${stats.darglobal_pages} DarGlobal pages`
+                  : 'DarGlobal and Wasalt public data'}
               </p>
-            </div>
+              <p className="mt-1 flex items-center gap-1.5 text-faint">
+                <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                {status.label}
+              </p>
+            </>
           )}
         </div>
       </aside>

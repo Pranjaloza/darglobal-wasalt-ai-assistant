@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 /** Renders the model's markdown answers (headings, lists, tables, links). */
 function Markdown({ content }: { content: string }) {
   return (
-    <div className="markdown text-sm leading-7 text-[#172033]">
+    <div className="markdown">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -14,7 +14,7 @@ function Markdown({ content }: { content: string }) {
             </a>
           ),
           table: ({ children }) => (
-            <div className="my-3 overflow-x-auto rounded-lg border border-gray-200">
+            <div className="my-3 overflow-x-auto">
               <table>{children}</table>
             </div>
           ),

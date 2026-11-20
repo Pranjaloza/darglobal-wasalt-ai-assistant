@@ -1,8 +1,8 @@
-import { LoaderCircle, Menu, RotateCcw, Search, SearchX } from 'lucide-react'
+import { LoaderCircle, Menu } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { searchProperties } from '../services/api'
 import type { DatasetStats, Property, PropertyFilters } from '../types'
-import PropertyCard from './PropertyCard'
+import ListingsTable from './ListingsTable'
 
 interface PropertyDiscoveryProps {
   stats: DatasetStats | null
@@ -12,21 +12,28 @@ interface PropertyDiscoveryProps {
 type SortOrder = 'price-asc' | 'price-desc' | 'bedrooms-desc' | 'area-desc'
 
 const BUDGETS = [
-  { label: 'Any budget', value: '' },
-  { label: 'Under 1M SAR', value: '1000000' },
-  { label: 'Under 1.5M SAR', value: '1500000' },
-  { label: 'Under 2M SAR', value: '2000000' },
-  { label: 'Under 3M SAR', value: '3000000' },
-  { label: 'Under 5M SAR', value: '5000000' },
+  { label: 'Any price', value: '' },
+  { label: 'Under 1,000,000', value: '1000000' },
+  { label: 'Under 1,500,000', value: '1500000' },
+  { label: 'Under 2,000,000', value: '2000000' },
+  { label: 'Under 3,000,000', value: '3000000' },
+  { label: 'Under 5,000,000', value: '5000000' },
 ]
 
 const BEDROOMS = [
-  { label: 'Any bedrooms', value: '' },
-  { label: '4+ bedrooms', value: '4' },
-  { label: '5+ bedrooms', value: '5' },
-  { label: '6+ bedrooms', value: '6' },
-  { label: '7+ bedrooms', value: '7' },
-  { label: '8+ bedrooms', value: '8' },
+  { label: 'Any', value: '' },
+  { label: '4+', value: '4' },
+  { label: '5+', value: '5' },
+  { label: '6+', value: '6' },
+  { label: '7+', value: '7' },
+  { label: '8+', value: '8' },
+]
+
+const SORTS: { label: string; value: SortOrder }[] = [
+  { label: 'Price, low to high', value: 'price-asc' },
+  { label: 'Price, high to low', value: 'price-desc' },
+  { label: 'Most bedrooms', value: 'bedrooms-desc' },
+  { label: 'Largest area', value: 'area-desc' },
 ]
 
 function sortProperties(properties: Property[], order: SortOrder) {
@@ -45,8 +52,34 @@ function sortProperties(properties: Property[], order: SortOrder) {
   })
 }
 
-const selectClass =
-  'w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-[#172033] outline-none transition focus:border-[#C6A66B]'
+function Field({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  options: { label: string; value: string }[]
+}) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1 text-xs text-muted">
+      {label}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="tabular h-9 rounded-sm border border-line-strong bg-surface px-2 text-sm text-ink outline-none focus:border-accent"
+      >
+        {options.map((option) => (
+          <option key={option.label} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
 
 function PropertyDiscovery({ stats, onOpenMenu }: PropertyDiscoveryProps) {
   const [city, setCity] = useState('')
@@ -72,156 +105,94 @@ function PropertyDiscovery({ stats, onOpenMenu }: PropertyDiscoveryProps) {
       const response = await searchProperties(filters)
       setProperties(response.properties)
     } catch {
-      setError('Could not load listings. Please try again.')
+      setError('Could not load listings.')
       setProperties([])
     } finally {
       setIsLoading(false)
     }
   }, [city, maxPrice, minBedrooms])
 
-  // Search again whenever a filter changes
   useEffect(() => {
     runSearch()
   }, [runSearch])
 
-  const resetFilters = () => {
-    setCity('')
-    setMaxPrice('')
-    setMinBedrooms('')
-    setSortOrder('price-asc')
-  }
-
   const hasFilters = Boolean(city || maxPrice || minBedrooms)
   const sorted = sortProperties(properties, sortOrder)
 
+  const cityOptions = [
+    { label: 'All cities', value: '' },
+    ...(stats?.cities.map((c) => ({ label: `${c.name} (${c.count})`, value: c.name })) ?? []),
+  ]
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex h-[76px] shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 md:px-8">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-paper">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-4 md:px-6">
         <button
           onClick={onOpenMenu}
-          className="rounded-lg p-2 text-[#172033] hover:bg-gray-100 md:hidden"
+          className="-ml-1 rounded-sm p-1.5 text-ink-2 hover:bg-line md:hidden"
           aria-label="Open menu"
         >
-          <Menu size={20} />
+          <Menu size={19} />
         </button>
-        <div>
-          <h2 className="font-semibold text-[#172033]">Property discovery</h2>
-          <p className="text-xs text-gray-500">
-            Browse and filter {stats ? `${stats.total_listings} ` : ''}collected Wasalt listings
-          </p>
-        </div>
+        <h2 className="text-sm font-medium">Listings</h2>
+        <span className="text-xs text-faint">Wasalt, collected for this project</span>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-8">
+      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6">
         <div className="mx-auto max-w-5xl">
-          {/* Filters */}
-          <div className="mb-6 grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
-            <label className="text-xs font-semibold text-gray-500">
-              City
-              <select value={city} onChange={(e) => setCity(e.target.value)} className={`mt-1.5 ${selectClass}`}>
-                <option value="">All cities</option>
-                {stats?.cities.map((c) => (
-                  <option key={c.name} value={c.name}>
-                    {c.name} ({c.count})
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="text-xs font-semibold text-gray-500">
-              Budget
-              <select value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={`mt-1.5 ${selectClass}`}>
-                {BUDGETS.map((b) => (
-                  <option key={b.label} value={b.value}>
-                    {b.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="text-xs font-semibold text-gray-500">
-              Bedrooms
-              <select value={minBedrooms} onChange={(e) => setMinBedrooms(e.target.value)} className={`mt-1.5 ${selectClass}`}>
-                {BEDROOMS.map((b) => (
-                  <option key={b.label} value={b.value}>
-                    {b.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="text-xs font-semibold text-gray-500">
-              Sort by
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                className={`mt-1.5 ${selectClass}`}
-              >
-                <option value="price-asc">Price: low to high</option>
-                <option value="price-desc">Price: high to low</option>
-                <option value="bedrooms-desc">Most bedrooms</option>
-                <option value="area-desc">Largest area</option>
-              </select>
-            </label>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Field label="City" value={city} onChange={setCity} options={cityOptions} />
+            <Field label="Max price (SAR)" value={maxPrice} onChange={setMaxPrice} options={BUDGETS} />
+            <Field label="Bedrooms" value={minBedrooms} onChange={setMinBedrooms} options={BEDROOMS} />
+            <Field
+              label="Sort"
+              value={sortOrder}
+              onChange={(value) => setSortOrder(value as SortOrder)}
+              options={SORTS}
+            />
           </div>
 
-          {/* Result summary */}
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-500">
-              {isLoading ? (
-                'Searching…'
-              ) : (
-                <>
-                  <span className="font-semibold text-[#172033]">{sorted.length}</span>{' '}
-                  {sorted.length === 1 ? 'listing' : 'listings'} found
-                </>
-              )}
-            </p>
-
+          <div className="mb-2 mt-5 flex h-6 items-center justify-between text-xs text-muted">
+            <span className="tabular">
+              {isLoading ? 'Loading…' : `${sorted.length} ${sorted.length === 1 ? 'listing' : 'listings'}`}
+            </span>
             {hasFilters && (
               <button
-                onClick={resetFilters}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#A9874C] hover:underline"
+                onClick={() => {
+                  setCity('')
+                  setMaxPrice('')
+                  setMinBedrooms('')
+                }}
+                className="text-accent hover:underline"
               >
-                <RotateCcw size={13} />
-                Reset filters
+                Clear filters
               </button>
             )}
           </div>
 
-          {/* Results */}
           {isLoading ? (
-            <div className="flex items-center justify-center gap-3 py-20 text-sm text-gray-500">
-              <LoaderCircle size={20} className="animate-spin text-[#A9874C]" />
-              Loading listings…
+            <div className="flex items-center gap-2 rounded-md border border-line bg-surface px-4 py-10 text-sm text-muted">
+              <LoaderCircle size={15} className="animate-spin" />
+              Loading listings
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-center">
-              <p className="text-sm text-red-700">{error}</p>
-              <button
-                onClick={runSearch}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm hover:bg-red-100"
-              >
-                <Search size={13} />
+            <div className="flex items-center justify-between rounded-md border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">
+              {error}
+              <button onClick={runSearch} className="text-xs underline">
                 Try again
               </button>
             </div>
           ) : sorted.length === 0 ? (
-            <div className="flex flex-col items-center rounded-2xl border border-dashed border-gray-300 py-16 text-center">
-              <SearchX size={28} className="mb-3 text-gray-400" />
-              <p className="text-sm font-semibold text-[#172033]">No listings match these filters</p>
-              <p className="mt-1 text-xs text-gray-500">Try a higher budget or fewer bedrooms.</p>
+            <div className="rounded-md border border-line bg-surface px-4 py-10 text-center text-sm text-muted">
+              No listings match these filters. Try a higher price or fewer bedrooms.
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {sorted.map((property, index) => (
-                <PropertyCard key={`${property.source_url}-${index}`} property={property} />
-              ))}
-            </div>
+            <ListingsTable properties={sorted} />
           )}
 
-          <p className="mt-8 text-center text-xs text-gray-400">
-            Listings were collected from public Wasalt pages and may no longer be available.
+          <p className="mt-4 text-xs text-faint">
+            Listing details were collected from public Wasalt pages and may no longer be current. Follow a row's
+            link to see the original listing.
           </p>
         </div>
       </main>
