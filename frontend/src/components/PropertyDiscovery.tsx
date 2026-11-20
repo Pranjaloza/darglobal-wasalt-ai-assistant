@@ -2,7 +2,10 @@ import { LoaderCircle, Menu } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { searchProperties } from '../services/api'
 import type { DatasetStats, Property, PropertyFilters } from '../types'
+import { compactSar, median } from '../format'
 import ListingsTable from './ListingsTable'
+import PriceDistribution from './PriceDistribution'
+import Skyline from './Skyline'
 
 interface PropertyDiscoveryProps {
   stats: DatasetStats | null
@@ -119,6 +122,14 @@ function PropertyDiscovery({ stats, onOpenMenu }: PropertyDiscoveryProps) {
   const hasFilters = Boolean(city || maxPrice || minBedrooms)
   const sorted = sortProperties(properties, sortOrder)
 
+  const prices = properties.map((p) => p.price).filter((p): p is number => p != null)
+  const figures = [
+    { label: hasFilters ? 'Matching listings' : 'Listings', value: isLoading ? '…' : String(properties.length) },
+    { label: 'Lowest, SAR', value: prices.length ? compactSar(Math.min(...prices)) : '—' },
+    { label: 'Median, SAR', value: prices.length ? compactSar(median(prices)!) : '—' },
+    { label: 'Highest, SAR', value: prices.length ? compactSar(Math.max(...prices)) : '—' },
+  ]
+
   const cityOptions = [
     { label: 'All cities', value: '' },
     ...(stats?.cities.map((c) => ({ label: `${c.name} (${c.count})`, value: c.name })) ?? []),
@@ -126,7 +137,7 @@ function PropertyDiscovery({ stats, onOpenMenu }: PropertyDiscoveryProps) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-paper">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line px-4 md:px-6">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-surface px-4 md:px-6">
         <button
           onClick={onOpenMenu}
           className="-ml-1 rounded-sm p-1.5 text-ink-2 hover:bg-line md:hidden"
@@ -138,9 +149,40 @@ function PropertyDiscovery({ stats, onOpenMenu }: PropertyDiscoveryProps) {
         <span className="text-xs text-faint">Wasalt, collected for this project</span>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6">
-        <div className="mx-auto max-w-5xl">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <main className="min-h-0 flex-1 overflow-y-auto">
+        {/* Navy summary band: figures follow the current filters */}
+        <section className="relative overflow-hidden bg-nav text-nav-text">
+          <Skyline className="pointer-events-none absolute bottom-0 left-0 h-[60%] w-[30%] -scale-x-100 text-gold/10" />
+          <div className="relative mx-auto grid max-w-5xl gap-8 px-4 pb-16 pt-8 md:grid-cols-[1fr_300px] md:px-6">
+            <div>
+              <p className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.2em] text-gold">
+                <span className="h-px w-8 bg-gold" />
+                Wasalt listings
+              </p>
+              <h1 className="mt-3 font-display text-3xl font-semibold leading-tight text-white md:text-4xl">
+                {city ? `Villas and homes in ${city}` : 'Villas and homes in Saudi Arabia'}
+              </h1>
+              <dl className="mt-6 grid grid-cols-2 gap-y-4 sm:grid-cols-4">
+                {figures.map((figure, index) => (
+                  <div
+                    key={figure.label}
+                    className={`pr-4 ${index % 2 === 1 ? 'border-l border-nav-line pl-4' : ''} ${
+                      index === 2 ? 'sm:border-l sm:border-nav-line sm:pl-4' : ''
+                    }`}
+                  >
+                    <dt className="sr-only">{figure.label}</dt>
+                    <dd className="tabular font-display text-3xl font-semibold leading-none text-gold">{figure.value}</dd>
+                    <dd className="mt-1.5 text-xs text-nav-muted">{figure.label}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            {!isLoading && properties.length > 0 && <PriceDistribution properties={properties} />}
+          </div>
+        </section>
+
+        <div className="mx-auto -mt-10 max-w-5xl px-4 pb-6 md:px-6">
+          <div className="relative grid grid-cols-2 gap-3 rounded-md border border-line bg-surface p-4 shadow-[0_8px_24px_rgb(8_28_42/0.08)] md:grid-cols-4">
             <Field label="City" value={city} onChange={setCity} options={cityOptions} />
             <Field label="Max price (SAR)" value={maxPrice} onChange={setMaxPrice} options={BUDGETS} />
             <Field label="Bedrooms" value={minBedrooms} onChange={setMinBedrooms} options={BEDROOMS} />

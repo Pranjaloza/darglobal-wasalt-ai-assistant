@@ -35,7 +35,7 @@ function ListingsTable({ properties, compact = false }: ListingsTableProps) {
       {/* Desktop / tablet */}
       <table className="tabular hidden w-full text-sm md:table">
         <thead>
-          <tr className="border-b border-line text-left text-xs text-muted">
+          <tr className="border-b border-line-strong bg-accent-soft text-left text-[11px] uppercase tracking-[0.08em] text-accent">
             <th className="px-4 py-2.5 font-medium">Listing</th>
             {showCity && <th className="px-3 py-2.5 font-medium">City</th>}
             <th className="px-3 py-2.5 font-medium">District</th>

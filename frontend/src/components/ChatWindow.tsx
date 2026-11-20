@@ -1,8 +1,22 @@
-import { ArrowRight, Check, Copy, CornerDownLeft, LoaderCircle, Menu, RotateCcw } from 'lucide-react'
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  Copy,
+  CornerDownLeft,
+  Landmark,
+  LoaderCircle,
+  Menu,
+  RotateCcw,
+  Scale,
+  SlidersHorizontal,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { ApiStatus, ChatMessage, DatasetStats } from '../types'
+import { compactSar } from '../format'
 import ListingsTable from './ListingsTable'
 import Markdown from './Markdown'
+import Skyline from './Skyline'
 
 interface ChatWindowProps {
   title: string
@@ -26,10 +40,26 @@ const STATUS_TEXT: Record<ApiStatus, { text: string; className: string }> = {
 }
 
 const EXAMPLES = [
-  'Find villas in Madinah below 2 million SAR with at least 5 bedrooms',
-  'Show me properties in Jeddah with more than 5 bedrooms',
-  'What does DarGlobal do, and which countries does it build in?',
-  'Compare the cheapest 6-bedroom listings in Madinah',
+  {
+    tag: 'Wasalt · Search',
+    icon: SlidersHorizontal,
+    question: 'Find villas in Madinah below 2 million SAR with at least 5 bedrooms',
+  },
+  {
+    tag: 'Wasalt · Search',
+    icon: Building2,
+    question: 'Show me properties in Jeddah with more than 5 bedrooms',
+  },
+  {
+    tag: 'DarGlobal · Company',
+    icon: Landmark,
+    question: 'What does DarGlobal do, and which countries does it build in?',
+  },
+  {
+    tag: 'Wasalt · Compare',
+    icon: Scale,
+    question: 'Compare the cheapest 6-bedroom listings in Madinah',
+  },
 ]
 
 const LISTINGS_PREVIEW = 5
@@ -62,7 +92,8 @@ function Answer({ message }: { message: ChatMessage }) {
   const shown = showAll ? properties : properties.slice(0, LISTINGS_PREVIEW)
 
   return (
-    <article>
+    <article className="rounded-md border border-line border-t-2 border-t-gold bg-surface px-5 py-4 shadow-[0_1px_2px_rgb(8_28_42/0.04)] md:px-6 md:py-5">
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-accent">Answer</p>
       <Markdown content={message.content} />
 
       {properties.length > 0 && (
@@ -104,7 +135,7 @@ function Answer({ message }: { message: ChatMessage }) {
         </section>
       )}
 
-      <footer className="mt-3 flex items-center gap-3 text-xs text-faint">
+      <footer className="mt-4 flex items-center gap-3 border-t border-line pt-3 text-xs text-faint">
         <CopyButton text={message.content} />
         {message.model && <span className="truncate">{message.model}</span>}
       </footer>
@@ -121,43 +152,86 @@ function EmptyState({
   onPick: (question: string) => void
   disabled: boolean
 }) {
-  const cities = stats?.cities.map((c) => c.name).join(' and ')
+  const figures = stats
+    ? [
+        { value: String(stats.total_listings), label: 'Wasalt listings' },
+        { value: String(stats.cities.length), label: stats.cities.map((c) => c.name).join(' · ') },
+        {
+          value: stats.price_range
+            ? `${compactSar(stats.price_range.min)}–${compactSar(stats.price_range.max)}`
+            : '—',
+          label: 'Price range, SAR',
+        },
+        { value: String(stats.darglobal_pages), label: 'DarGlobal pages' },
+      ]
+    : []
 
   return (
-    <div className="mx-auto w-full max-w-2xl pt-6 md:pt-16">
-      <h1 className="max-w-xl text-balance font-display text-3xl font-semibold leading-tight text-ink md:text-4xl">
-        Ask about DarGlobal projects or Wasalt listings
-      </h1>
-      <p className="mt-2 max-w-xl text-sm leading-6 text-ink-2">
-        {stats ? (
-          <>
-            Answers draw on <span className="tabular">{stats.total_listings}</span> Wasalt listings in{' '}
-            {cities} and <span className="tabular">{stats.darglobal_pages}</span> pages from DarGlobal's
-            website. Property questions are matched against listing prices, bedrooms and location; each
-            answer links back to its sources.
-          </>
-        ) : (
-          'Answers draw on collected Wasalt listings and pages from DarGlobal’s website, and link back to their sources.'
-        )}
-      </p>
+    <div>
+      {/* Navy hero band */}
+      <section className="relative overflow-hidden bg-nav text-nav-text">
+        <Skyline className="pointer-events-none absolute bottom-0 right-0 h-[70%] w-[45%] text-gold/15" />
+        <div className="relative mx-auto max-w-4xl px-5 pb-10 pt-10 md:px-8 md:pb-14 md:pt-16">
+          <p className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.2em] text-gold">
+            <span className="h-px w-8 bg-gold" />
+            Research desk
+          </p>
+          <h1 className="mt-4 max-w-2xl text-balance font-display text-4xl font-semibold leading-[1.1] text-white md:text-5xl">
+            Ask about DarGlobal projects or Wasalt listings
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-nav-muted md:text-[15px]">
+            Property questions are matched against listing prices, bedrooms and location. Company
+            questions are answered from DarGlobal&rsquo;s own pages, and every answer links back to its
+            sources.
+          </p>
 
-      <div className="mt-8">
-        <p className="mb-2 text-xs font-medium text-muted">Examples</p>
-        <ul className="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
-          {EXAMPLES.map((example) => (
-            <li key={example}>
-              <button
-                onClick={() => onPick(example)}
-                disabled={disabled}
-                className="group flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm text-ink-2 hover:bg-paper hover:text-ink disabled:opacity-50"
-              >
-                {example}
-                <ArrowRight size={15} className="shrink-0 text-faint group-hover:text-accent" />
-              </button>
-            </li>
+          {figures.length > 0 && (
+            <dl className="mt-8 grid max-w-3xl grid-cols-2 gap-y-5 border-t border-nav-line pt-6 md:grid-cols-4">
+              {figures.map((figure, index) => (
+                <div
+                  key={figure.label}
+                  className={`pr-4 ${index % 2 === 1 ? 'border-l border-nav-line pl-5' : ''} ${
+                    index === 2 ? 'md:border-l md:border-nav-line md:pl-5' : ''
+                  }`}
+                >
+                  <dt className="sr-only">{figure.label}</dt>
+                  <dd className="tabular font-display text-3xl font-semibold leading-none text-gold">
+                    {figure.value}
+                  </dd>
+                  <dd className="mt-1.5 text-xs text-nav-muted">{figure.label}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </section>
+
+      {/* Example questions */}
+      <section className="mx-auto max-w-4xl px-5 py-8 md:px-8">
+        <h2 className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+          Start with a question
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {EXAMPLES.map(({ tag, icon: Icon, question }) => (
+            <button
+              key={question}
+              onClick={() => onPick(question)}
+              disabled={disabled}
+              className="group flex flex-col rounded-md border border-line bg-surface p-4 text-left transition-colors hover:border-gold disabled:opacity-50"
+            >
+              <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.12em] text-accent">
+                <Icon size={14} />
+                {tag}
+              </span>
+              <span className="mt-2 text-[15px] leading-snug text-ink">{question}</span>
+              <span className="mt-3 inline-flex items-center gap-1 text-xs text-muted group-hover:text-accent">
+                Ask this
+                <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </button>
           ))}
-        </ul>
-      </div>
+        </div>
+      </section>
     </div>
   )
 }
@@ -196,7 +270,7 @@ function ChatWindow({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-paper">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-paper px-4 md:px-6">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-surface px-4 md:px-6">
         <button
           onClick={onOpenMenu}
           className="-ml-1 rounded-sm p-1.5 text-ink-2 hover:bg-line md:hidden"
@@ -208,15 +282,15 @@ function ChatWindow({
         {status.text && <span className={`shrink-0 text-xs ${status.className}`}>{status.text}</span>}
       </header>
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 md:px-6">
+      <main className={`min-h-0 flex-1 overflow-y-auto ${messages.length === 0 ? '' : 'px-4 py-6 md:px-6'}`}>
         {messages.length === 0 ? (
           <EmptyState stats={stats} onPick={handleSubmit} disabled={isLoading} />
         ) : (
-          <div className="mx-auto w-full max-w-3xl space-y-8">
+          <div className="mx-auto w-full max-w-3xl space-y-6">
             {messages.map((message) =>
               message.role === 'user' ? (
                 <div key={message.id} className="flex justify-end">
-                  <p className="max-w-[85%] whitespace-pre-wrap rounded-md bg-panel px-4 py-2.5 text-sm leading-6 text-ink">
+                  <p className="max-w-[85%] whitespace-pre-wrap rounded-md bg-nav px-4 py-2.5 text-sm leading-6 text-white">
                     {message.content}
                   </p>
                 </div>

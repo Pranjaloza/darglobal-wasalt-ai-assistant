@@ -86,7 +86,7 @@ button {
 }
 
 .tabular {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 /* ---------- Markdown answers ---------- */
