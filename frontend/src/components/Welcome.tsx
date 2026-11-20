@@ -19,18 +19,17 @@ interface WelcomeProps {
 /** Chat-first welcome screen: heading, question box and suggested questions. */
 function Welcome({ stats, onAsk, disabled }: WelcomeProps) {
   return (
-    <div className="flex min-h-full items-center py-10">
+    <div className="pb-12 pt-10 md:pt-[12vh]">
       <div className={CHAT_CONTAINER}>
         <h1 className="text-2xl font-semibold text-ink md:text-[28px]">
           Ask about DarGlobal projects or Wasalt listings
         </h1>
-        <p className="mt-2 text-sm leading-6 text-muted">
-          Search listings by city, budget and bedrooms, or ask about DarGlobal&rsquo;s company and projects.
-          Answers use only the collected data and link to their sources, and follow-ups such as
-          &ldquo;what about Jeddah?&rdquo; build on the previous question.
+        <p className="mt-2 max-w-2xl text-[15px] leading-6 text-muted">
+          Search Wasalt listings by city, budget and bedrooms, or ask about DarGlobal&rsquo;s projects.
+          Follow-ups like &ldquo;what about Jeddah?&rdquo; build on your last question.
         </p>
 
-        <div className="mt-6">
+        <div className="mt-7">
           <QuestionBox
             size="large"
             onSubmit={onAsk}
@@ -39,13 +38,14 @@ function Welcome({ stats, onAsk, disabled }: WelcomeProps) {
           />
         </div>
 
-        <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+        <p className="mb-2.5 mt-9 text-xs font-medium text-muted">Suggested questions</p>
+        <div className="grid gap-3 sm:grid-cols-2">
           {SUGGESTIONS.map(({ topic, question }) => (
             <button
               key={question}
               onClick={() => onAsk(question)}
               disabled={disabled}
-              className="group flex items-start justify-between gap-3 rounded-md border border-line bg-surface px-4 py-3 text-left hover:border-accent disabled:opacity-50"
+              className="group flex items-start justify-between gap-3 rounded-md border border-line bg-surface px-4 py-3.5 text-left hover:border-accent disabled:opacity-50"
             >
               <span>
                 <span className="block text-xs font-medium text-accent">{topic}</span>
@@ -56,7 +56,7 @@ function Welcome({ stats, onAsk, disabled }: WelcomeProps) {
           ))}
         </div>
 
-        <p className="tabular mt-6 text-xs text-faint">
+        <p className="tabular mt-8 border-t border-line pt-4 text-xs text-faint">
           {stats
             ? `Data: ${stats.total_listings} Wasalt listings · ${stats.cities.map((c) => c.name).join(', ')} · ${stats.darglobal_pages} DarGlobal pages. Prices and availability may have changed.`
             : 'Data: collected Wasalt listings and DarGlobal pages. Prices and availability may have changed.'}
